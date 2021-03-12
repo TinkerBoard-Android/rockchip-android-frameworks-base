@@ -1293,11 +1293,11 @@ public class DisplayRotation {
         } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LOCKED) {
             // Application just wants to remain locked in the last rotation.
             preferredRotation = lastRotation;
-        } else if (!mSupportAutoRotation) {
+        } /*else if (!mSupportAutoRotation) {
             // If we don't support auto-rotation then bail out here and ignore
             // the sensor and any rotation lock settings.
             preferredRotation = -1;
-        } else if (((mUserRotationMode == WindowManagerPolicy.USER_ROTATION_FREE
+        } */else if (((mUserRotationMode == WindowManagerPolicy.USER_ROTATION_FREE
                             || isTabletopAutoRotateOverrideEnabled())
                         && (orientation == ActivityInfo.SCREEN_ORIENTATION_USER
                                 || orientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
