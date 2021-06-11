@@ -303,8 +303,7 @@ public final class ShutdownThread extends Thread {
         if (mReason != null && mReason.startsWith(PowerManager.REBOOT_RECOVERY_UPDATE)) {
             // We need the progress bar if uncrypt will be invoked during the
             // reboot, which might be time-consuming.
-            mRebootHasProgressBar = RecoverySystem.UNCRYPT_PACKAGE_FILE.exists()
-                    && !(RecoverySystem.BLOCK_MAP_FILE.exists());
+            mRebootHasProgressBar = RecoverySystem.UNCRYPT_PACKAGE_FILE.exists();
             pd.setTitle(context.getText(com.android.internal.R.string.reboot_to_update_title));
             if (mRebootHasProgressBar) {
                 pd.setMax(100);
