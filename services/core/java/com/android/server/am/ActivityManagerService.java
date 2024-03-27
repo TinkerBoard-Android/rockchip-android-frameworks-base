@@ -5149,7 +5149,7 @@ public class ActivityManagerService extends IActivityManager.Stub
             mUserController.scheduleStartProfiles();
         }
         // UART is on if init's console service is running, send a warning notification.
-        showConsoleNotificationIfActive();
+        //showConsoleNotificationIfActive();
         showMteOverrideNotificationIfActive();
 
         t.traceEnd();
