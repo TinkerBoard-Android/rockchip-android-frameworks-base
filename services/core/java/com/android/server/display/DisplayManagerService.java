@@ -2808,7 +2808,14 @@ public final class DisplayManagerService extends SystemService {
                     + device.getDisplayDeviceInfoLocked());
             return;
         }
-        display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF);
+        if(!display.hasContentLocked() && info.type == Display.TYPE_EXTERNAL){
+            //int rotation = device.getDisplayDeviceInfoLocked().rotation;
+            //device.getDisplayDeviceInfoLocked().rotation=(rotation+mLogicalDisplayMapper.getDisplayLocked(Display.DEFAULT_DISPLAY).getDisplayInfoLocked().rotation)%4;
+            LogicalDisplay mDefaultDisplay=mLogicalDisplayMapper.getDisplayLocked(Display.DEFAULT_DISPLAY);
+            display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF,mDefaultDisplay);
+        }else {
+            display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF);
+        }
         final Optional<Integer> viewportType = getViewportType(info);
         if (viewportType.isPresent()) {
             populateViewportLocked(viewportType.get(), display.getDisplayIdLocked(), device, info);

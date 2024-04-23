@@ -672,6 +672,143 @@ final class LogicalDisplay {
         int orientation = Surface.ROTATION_0;
         if ((displayDeviceInfo.flags & DisplayDeviceInfo.FLAG_ROTATES_WITH_CONTENT) != 0) {
             orientation = displayInfo.rotation;
+            if(device.getDisplayDeviceInfoLocked().type==Display.TYPE_INTERNAL){
+                SystemProperties.set("persist.sys.rotation",String.valueOf(orientation));
+            }
+        }
+
+        // Apply the physical rotation of the display device itself.
+        orientation = (orientation + displayDeviceInfo.rotation) % 4;
+
+        // Set the frame.
+        // The frame specifies the rotated physical coordinates into which the viewport
+        // is mapped.  We need to take care to preserve the aspect ratio of the viewport.
+        // Currently we maximize the area to fill the display, but we could try to be
+        // more clever and match resolutions.
+        boolean rotated = (orientation == Surface.ROTATION_90
+                || orientation == Surface.ROTATION_270);
+        int physWidth = rotated ? displayDeviceInfo.height : displayDeviceInfo.width;
+        int physHeight = rotated ? displayDeviceInfo.width : displayDeviceInfo.height;
+
+        Rect maskingInsets = getMaskingInsets(displayDeviceInfo);
+        InsetUtils.rotateInsets(maskingInsets, orientation);
+        // Don't consider the masked area as available when calculating the scaling below.
+        physWidth -= maskingInsets.left + maskingInsets.right;
+        physHeight -= maskingInsets.top + maskingInsets.bottom;
+
+        // Determine whether the width or height is more constrained to be scaled.
+        //    physWidth / displayInfo.logicalWidth    => letter box
+        // or physHeight / displayInfo.logicalHeight  => pillar box
+        //
+        // We avoid a division (and possible floating point imprecision) here by
+        // multiplying the fractions by the product of their denominators before
+        // comparing them.
+        int displayRectWidth, displayRectHeight;
+        if ((displayInfo.flags & Display.FLAG_SCALING_DISABLED) != 0 || mDisplayScalingDisabled) {
+            displayRectWidth = displayInfo.logicalWidth;
+            displayRectHeight = displayInfo.logicalHeight;
+        } else if (physWidth * displayInfo.logicalHeight
+                < physHeight * displayInfo.logicalWidth) {
+            // Letter box.
+            displayRectWidth = physWidth;
+            displayRectHeight = displayInfo.logicalHeight * physWidth / displayInfo.logicalWidth;
+        } else {
+            // Pillar box.
+            displayRectWidth = displayInfo.logicalWidth * physHeight / displayInfo.logicalHeight;
+            displayRectHeight = physHeight;
+        }
+        int displayRectTop = (physHeight - displayRectHeight) / 2;
+        int displayRectLeft = (physWidth - displayRectWidth) / 2;
+        mTempDisplayRect.set(displayRectLeft, displayRectTop,
+                displayRectLeft + displayRectWidth, displayRectTop + displayRectHeight);
+
+        // Now add back the offset for the masked area.
+        mTempDisplayRect.offset(maskingInsets.left, maskingInsets.top);
+
+        if (orientation == Surface.ROTATION_0) {
+            mTempDisplayRect.offset(mDisplayOffsetX, mDisplayOffsetY);
+        } else if (orientation == Surface.ROTATION_90) {
+            mTempDisplayRect.offset(mDisplayOffsetY, -mDisplayOffsetX);
+        } else if (orientation == Surface.ROTATION_180) {
+            mTempDisplayRect.offset(-mDisplayOffsetX, -mDisplayOffsetY);
+        } else {  // Surface.ROTATION_270
+            mTempDisplayRect.offset(-mDisplayOffsetY, mDisplayOffsetX);
+        }
+        //-----rk-code-----//
+        if (SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")||SystemProperties.get("ro.board.platform").equals("rk3576")) {
+            if (displayDeviceInfo.type == Display.TYPE_EXTERNAL) {
+                String mPhysicalDisplayId = device.getDisplayDeviceInfoLocked().uniqueId.split(":")[1];
+                String property="persist.sys.rotation.efull-"+mPhysicalDisplayId;
+                if (SystemProperties.getBoolean(property, false)) {
+                    mTempDisplayRect.top = 0;
+                    mTempDisplayRect.left = 0;
+                    mTempDisplayRect.right = physWidth;
+                    mTempDisplayRect.bottom = physHeight;
+                }
+            }
+        } else {
+            if (device.getDisplayDeviceInfoLocked().type == Display.TYPE_EXTERNAL) {
+                if (SystemProperties.getBoolean("persist.sys.rotation.efull", false)) {
+                    mTempDisplayRect.top = 0;
+                    mTempDisplayRect.left = 0;
+                    mTempDisplayRect.right = physWidth;
+                    mTempDisplayRect.bottom = physHeight;
+                }
+            }
+        }
+        //-----------------//
+        mDisplayPosition.set(mTempDisplayRect.left, mTempDisplayRect.top);
+        device.setProjectionLocked(t, orientation, mTempLayerStackRect, mTempDisplayRect);
+    }
+
+
+    public void configureDisplayLocked(SurfaceControl.Transaction t,
+                                       DisplayDevice device,
+                                       boolean isBlanked,LogicalDisplay defaultDisplay) {
+        // Set the layer stack.
+        device.setLayerStackLocked(t, isBlanked ? BLANK_LAYER_STACK : mLayerStack, mDisplayId);
+
+        // Also inform whether the device is the same one sent to inputflinger for its layerstack.
+        // Prevent displays that are disabled from receiving input.
+        // TODO(b/188914255): Remove once input can dispatch against device vs layerstack.
+        device.setDisplayFlagsLocked(t,
+                (isEnabledLocked() && device.getDisplayDeviceInfoLocked().touch != TOUCH_NONE)
+                        ? SurfaceControl.DISPLAY_RECEIVES_INPUT
+                        : 0);
+
+        // Set the color mode and allowed display mode.
+        if (device == mPrimaryDisplayDevice) {
+            device.setDesiredDisplayModeSpecsLocked(mDesiredDisplayModeSpecs);
+            device.setRequestedColorModeLocked(mRequestedColorMode);
+        } else {
+            // Reset to default for non primary displays
+            device.setDesiredDisplayModeSpecsLocked(
+                    new DisplayModeDirector.DesiredDisplayModeSpecs());
+            device.setRequestedColorModeLocked(0);
+        }
+
+        device.setAutoLowLatencyModeLocked(mRequestedMinimalPostProcessing);
+        device.setGameContentTypeLocked(mRequestedMinimalPostProcessing);
+
+        // Only grab the display info now as it may have been changed based on the requests above.
+        final DisplayInfo displayInfo = getDisplayInfoLocked();
+        final DisplayDeviceInfo displayDeviceInfo = device.getDisplayDeviceInfoLocked();
+
+        // Set the viewport.
+        // This is the area of the logical display that we intend to show on the
+        // display device.  For now, it is always the full size of the logical display.
+        mTempLayerStackRect.set(0, 0, displayInfo.logicalWidth, displayInfo.logicalHeight);
+
+        // Set the orientation.
+        // The orientation specifies how the physical coordinate system of the display
+        // is rotated when the contents of the logical display are rendered.
+        int orientation = Surface.ROTATION_0;
+        if ((displayDeviceInfo.flags & DisplayDeviceInfo.FLAG_ROTATES_WITH_CONTENT) != 0) {
+            int rotation=defaultDisplay.getDisplayInfoLocked().rotation;
+            orientation = rotation == 0 ? 0:rotation;
+            if(rotation%2!=0){
+                mTempLayerStackRect.set(0,0,displayInfo.logicalHeight,displayInfo.logicalWidth);
+            }
         }
 
         // Apply the physical rotation of the display device itself.

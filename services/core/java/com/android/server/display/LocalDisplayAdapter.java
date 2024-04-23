@@ -745,6 +745,7 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                         mInfo.name = getContext().getResources().getString(
                                 R.string.display_manager_hdmi_display_name);
                     }
+                    mInfo.flags |= DisplayDeviceInfo.FLAG_ROTATES_WITH_CONTENT;
                 }
                 mInfo.frameRateOverrides = mFrameRateOverrides;
 
