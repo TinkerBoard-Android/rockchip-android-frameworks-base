@@ -366,4 +366,8 @@ public class StatusBarWindowController {
             mLpChanged.forciblyShownTypes &= ~WindowInsets.Type.statusBars();
         }
     }
+
+     public ViewGroup getStatusBarWindowView() {
+        return mStatusBarWindowView;
+    }
 }

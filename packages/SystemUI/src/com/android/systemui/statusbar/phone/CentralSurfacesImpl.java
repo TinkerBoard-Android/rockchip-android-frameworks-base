@@ -291,6 +291,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private static final String BANNER_ACTION_SETUP =
             "com.android.systemui.statusbar.banner_action_setup";
 
+    private RegisterStatusBarResult mRegisterStatusBarResult;
+    static final String HIDE_NAVIGATION_BAR = "android.intent.action.HIDE_NAVIGATION_BAR";
+    static final String SHOW_NAVIGATION_BAR = "android.intent.action.SHOW_NAVIGATION_BAR";
     private static final int MSG_OPEN_SETTINGS_PANEL = 1002;
     private static final int MSG_LAUNCH_TRANSITION_TIMEOUT = 1003;
     // 1020-1040 reserved for BaseStatusBar
@@ -982,7 +985,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         } catch (RemoteException ex) {
             ex.rethrowFromSystemServer();
         }
-
+        mRegisterStatusBarResult = result;
         createAndAddWindows(result);
 
         // Set up the initial notification state. This needs to happen before CommandQueue.disable()
@@ -1536,6 +1539,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(HIDE_NAVIGATION_BAR);
+        filter.addAction(SHOW_NAVIGATION_BAR);
         mBroadcastDispatcher.registerReceiver(mBroadcastReceiver, filter, null, UserHandle.ALL);
     }
 
@@ -2057,6 +2062,15 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         makeStatusBarView(result);
         mNotificationShadeWindowController.attach();
         mStatusBarWindowController.attach();
+        //full screen
+        if (SystemProperties.getBoolean("persist.fullscreen.enable", false)) {
+            Log.d(TAG,"HIDE_NAVIGATION_BAR");
+            hideNavigation();
+        }
+        else {
+            Log.d(TAG,"SHOW_NAVIGATION_BAR");
+            displayNavigation();
+        }
     }
 
     // called by makeStatusbar and also by PhoneStatusBarView
@@ -2141,6 +2155,33 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             Trace.endSection();
         }
     };
+
+    public void hideNavigation() {
+        NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
+        if (mNavigationBarView != null) {
+            mNavigationBarController.onDisplayRemoved(mDisplayId);
+        }
+        ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
+        if (tempStatusBar != null){
+            tempStatusBar.setVisibility(View.GONE);
+            //SystemProperties.set("sys.systembar.hide","1");
+        }
+    }
+
+    public void displayNavigation() {
+        NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
+        if (mNavigationBarView == null) {
+            createNavigationBar(mRegisterStatusBarResult);
+        }
+
+        ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
+        if (tempStatusBar != null){
+            tempStatusBar.setVisibility(View.VISIBLE);
+            //requestNotificationUpdate("StatusBar state changed");
+            checkBarModes();
+            //SystemProperties.set("sys.systembar.hide","0");
+        }
+    }
 
     private final BroadcastReceiver mDemoReceiver = new BroadcastReceiver() {
         @Override
