@@ -5839,9 +5839,9 @@
     <!-- CEC Configuration -->
     <bool name="config_cecHdmiCecEnabled_userConfigurable">true</bool>
     <bool name="config_cecHdmiCecControlEnabled_allowed">true</bool>
-    <bool name="config_cecHdmiCecControlEnabled_default">true</bool>
+    <bool name="config_cecHdmiCecControlEnabled_default">false</bool>
     <bool name="config_cecHdmiCecControlDisabled_allowed">true</bool>
-    <bool name="config_cecHdmiCecControlDisabled_default">false</bool>
+    <bool name="config_cecHdmiCecControlDisabled_default">true</bool>
 
     <bool name="config_cecHdmiCecVersion_userConfigurable">true</bool>
     <bool name="config_cecHdmiCecVersion14b_allowed">true</bool>
