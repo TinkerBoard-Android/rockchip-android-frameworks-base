@@ -39,6 +39,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import android.os.SystemProperties;
 
 /**
  * @hide
@@ -97,6 +98,16 @@ public class ParsedPermissionUtils {
                             PermissionInfo.PROTECTION_NORMAL))
                     .setFlags(sa.getInt(
                             R.styleable.AndroidManifestPermission_permissionFlags, 0));
+
+            if (SystemProperties.get("ro.product.name").equals("Sanden_VM") ||
+                            SystemProperties.get("ro.product.name").equals("Sanden_CM")) {
+                    if (permission.toString().contains("EXTERNAL_STORAGE")) {
+			    permission.setProtectionLevel(PermissionInfo.PROTECTION_NORMAL);
+                            Slog.i(TAG, "modify " + permission.toString() + " protectionLevel to "
+                                    + permission.getProtectionLevel() + " for Sanden");
+                    }
+            }
+
 
             final int knownCertsResource = sa.getResourceId(
                     R.styleable.AndroidManifestPermission_knownCerts, 0);
