@@ -4555,7 +4555,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     msg.sendToTarget();
                     logKeyboardSystemsEvent(event, KeyboardLogEvent.LAUNCH_VOICE_ASSISTANT);
                 }
-                result &= ~ACTION_PASS_TO_USER;
+
+                if (SystemProperties.get("ro.product.name").equals("Sanden_VM") || SystemProperties.get("ro.product.name").equals("Sanden_CM")) {
+                    if (down) {
+                        Intent intent = new Intent();
+                        intent.setAction("android.intent.action.ENG_MODE_SWITCH");
+                        intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES | Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND);
+                        intent.putExtra("EXTRA_KEY_EVENT", keyCode);
+                        mContext.sendBroadcast(intent);
+                    }
+                } else {
+                    result &= ~ACTION_PASS_TO_USER;
+                }
+
                 break;
             }
             case KeyEvent.KEYCODE_WINDOW: {
