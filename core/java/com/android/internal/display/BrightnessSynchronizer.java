@@ -342,7 +342,9 @@ public class BrightnessSynchronizer {
                 // check if we need to update float
                 float brightnessFloat = getBrightnessAsFloat();
                 if (!floatEquals(mLatestFloatBrightness, brightnessFloat)) {
-                    mDisplayManager.setBrightness(Display.DEFAULT_DISPLAY, brightnessFloat);
+                    int mDisplayId = mContext.getDisplayId();
+                    Slog.d(TAG, "startSynchronizing mDisplayId = " + mDisplayId);
+                    mDisplayManager.setBrightness(mDisplayId != Display.INVALID_DISPLAY ? mDisplayId : Display.DEFAULT_DISPLAY, brightnessFloat);
                     mLatestFloatBrightness = brightnessFloat;
                     mUpdatedTypes |= TYPE_FLOAT;
                 }

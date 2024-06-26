@@ -43,6 +43,7 @@ import android.view.SurfaceControl;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.protolog.common.ProtoLog;
+import android.util.Slog;
 
 /**
  * Manages content recording for a particular {@link DisplayContent}.
@@ -517,6 +518,7 @@ final class ContentRecorder implements WindowContainerListener {
                 mDisplayContent.getConfiguration().screenWidthDp,
                 mDisplayContent.getConfiguration().screenHeightDp, surfaceSize.x, surfaceSize.y);
 
+        //------rk-code---------
         String mPhysicalDisplayId = mDisplayContent.getDisplayInfo().uniqueId.split(":")[1];
         String property = "persist.sys.rotation.efull-" + mPhysicalDisplayId;
         if (SystemProperties.getBoolean(property, false)) {
@@ -533,6 +535,7 @@ final class ContentRecorder implements WindowContainerListener {
             // the content will no longer be centered in the output surface.
             //.setPosition(mRecordedSurface, shiftedX /* x */, shiftedY /* y */);
         } else {
+        //----------------------
             transaction
                     // Crop the area to capture to exclude the 'extra' wallpaper that is used
                     // for parallax (b/189930234).
@@ -544,7 +547,9 @@ final class ContentRecorder implements WindowContainerListener {
                     // Position needs to be updated when the mirrored DisplayArea has changed, since
                     // the content will no longer be centered in the output surface.
                     .setPosition(mRecordedSurface, shiftedX /* x */, shiftedY /* y */);
+        //------rk-code---------
         }
+        //----------------------
         mLastRecordedBounds = new Rect(recordedContentBounds);
         mLastConsumingSurfaceSize.x = surfaceSize.x;
         mLastConsumingSurfaceSize.y = surfaceSize.y;

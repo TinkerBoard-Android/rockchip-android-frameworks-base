@@ -279,6 +279,12 @@ public class AudioSystem
     @Retention(RetentionPolicy.SOURCE)
     public @interface BtOffloadDeviceType {}
 
+    //-----rk-code-----//
+    // add AUDIO_FORMAT_IEC61937 define
+    /** @hide */
+    public static final int AUDIO_FORMAT_IEC61937       = 0x0D000000;
+    //----------------//
+
     /**
      * @hide
      * Convert audio format enum values to Bluetooth codec values

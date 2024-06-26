@@ -3930,4 +3930,22 @@ public class ApplicationPackageManager extends PackageManager {
             throw e.rethrowFromSystemServer();
         }
     }
+     //-----rk-code-----//
+    @Override
+    public void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode) {
+        try {
+            mPM.setPackageUiModeType(packageName, oldUiMode, newUiMode);
+        } catch (RemoteException e) {
+            throw e.rethrowAsRuntimeException();
+        }
+    }
+    @Override
+    public int getPackageUiModeType(String packageName) {
+        try {
+            return mPM.getPackageUiModeType(packageName);
+        } catch (RemoteException e) {
+            throw e.rethrowAsRuntimeException();
+        }
+    }
+    //----------------//
 }

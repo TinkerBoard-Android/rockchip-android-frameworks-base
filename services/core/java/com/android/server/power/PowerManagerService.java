@@ -132,6 +132,7 @@ import com.android.server.am.BatteryStatsService;
 import com.android.server.display.feature.DeviceConfigParameterProvider;
 import com.android.server.lights.LightsManager;
 import com.android.server.lights.LogicalLight;
+import com.android.server.policy.PhoneWindowManager;
 import com.android.server.policy.WindowManagerPolicy;
 import com.android.server.power.AmbientDisplaySuppressionController.AmbientDisplaySuppressionChangedCallback;
 import com.android.server.power.batterysaver.BatterySaverController;
@@ -184,6 +185,10 @@ public final class PowerManagerService extends SystemService
     private static final int MSG_CHECK_FOR_LONG_WAKELOCKS = 4;
     // Message: Sent when an attentive timeout occurs to update the power state.
     private static final int MSG_ATTENTIVE_TIMEOUT = 5;
+
+    //----rk-code----
+    private static final int MSG_SLEEP_DELAY_DREAM = 6;
+    //---------------
 
     // Dirty bit: mWakeLocks changed
     private static final int DIRTY_WAKE_LOCKS = 1 << 0;
@@ -470,6 +475,10 @@ public final class PowerManagerService extends SystemService
     // TODO(b/215518989): Remove this once transactions are in place
     private boolean mUpdatePowerStateInProgress;
 
+    //----rk-code----
+    private boolean mUpdatePowerStateInProgressSleep;
+    //---------------
+
     /**
      * The lock that should be held when interacting with {@link #mEnhancedDischargeTimeElapsed},
      * {@link #mLastEnhancedDischargeTimeUpdatedElapsed}, and
@@ -629,6 +638,10 @@ public final class PowerManagerService extends SystemService
     // to allow the current foreground activity to override the brightness.
     private float mScreenBrightnessOverrideFromWindowManager =
             PowerManager.BRIGHTNESS_INVALID_FLOAT;
+
+    /* -----rk-code----- */
+    private int mScreenBrightnessDisplayId = Display.INVALID_DISPLAY;
+    /* ---------- */
 
     // The window manager has determined the user to be inactive via other means.
     // Set this to false to disable.
@@ -2706,6 +2719,14 @@ public final class PowerManagerService extends SystemService
         if (!mSystemReady || mDirty == 0 || mUpdatePowerStateInProgress) {
             return;
         }
+        //----rk-code----
+        if(mRkebook){
+            if(mUpdatePowerStateInProgressSleep){
+                return;
+            }
+        }
+        //---------------
+
         if (!Thread.holdsLock(mLock)) {
             Slog.wtf(TAG, "Power manager lock was not held when calling updatePowerStateLocked");
         }
@@ -2736,6 +2757,15 @@ public final class PowerManagerService extends SystemService
                 }
             }
 
+            //----rk-code----
+            if(mPowerGroups.get(Display.DEFAULT_DISPLAY_GROUP).getUserActivitySummaryLocked()==USER_ACTIVITY_SCREEN_DREAM && mRkebook){
+                Slog.d("dzy","show screen dream,delay "+PhoneWindowManager.SLEEP_SCREEN_DREAM_DELAY+" ms to suspend. ");
+                mUpdatePowerStateInProgressSleep=true;
+                mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_SLEEP_DELAY_DREAM,dirtyPhase2,dirtyPhase2), PhoneWindowManager.SLEEP_SCREEN_DREAM_DELAY);
+                return;
+            }
+            //--------------
+
             // Phase 2: Lock profiles that became inactive/not kept awake.
             updateProfilesLocked(now);
 
@@ -2752,6 +2782,7 @@ public final class PowerManagerService extends SystemService
             // Because we might release the last suspend blocker here, we need to make sure
             // we finished everything else first!
             updateSuspendBlockerLocked();
+
         } finally {
             Trace.traceEnd(Trace.TRACE_TAG_POWER);
             mUpdatePowerStateInProgress = false;
@@ -3847,6 +3878,11 @@ public final class PowerManagerService extends SystemService
                 } else {
                     screenBrightnessOverride = PowerManager.BRIGHTNESS_INVALID_FLOAT;
                 }
+
+                /* -----rk-code----- */
+                powerGroup.setScreenBrightnessDisplayId(mScreenBrightnessDisplayId);
+                /* ---------- */
+
                 boolean ready = powerGroup.updateLocked(screenBrightnessOverride,
                         shouldUseProximitySensorLocked(), shouldBoostScreenBrightness(),
                         mDozeScreenStateOverrideFromDreamManager,
@@ -3868,6 +3904,9 @@ public final class PowerManagerService extends SystemService
                             powerGroup.getUserActivitySummaryLocked())
                             + ", mBootCompleted=" + mBootCompleted
                             + ", screenBrightnessOverride=" + screenBrightnessOverride
+                            /* -----rk-code----- */
+                            + ", powerGroup.mScreenBrightnessDisplayId=" + powerGroup.getScreenBrightnessDisplayId()
+                            /* ---------- */
                             + ", mScreenBrightnessBoostInProgress="
                             + mScreenBrightnessBoostInProgress
                             + ", sQuiescent=" + sQuiescent);
@@ -4625,6 +4664,14 @@ public final class PowerManagerService extends SystemService
         }
     }
 
+    /* -----rk-code----- */
+    private void setScreenBrightnessDisplayIdFromWindowManagerInternal(int displayId) {
+        synchronized (mLock) {
+            mScreenBrightnessDisplayId = displayId;
+        }
+    }
+    /* ---------- */
+
     private void setUserInactiveOverrideFromWindowManagerInternal() {
         synchronized (mLock) {
             mUserInactiveOverrideFromWindowManager = true;
@@ -4953,6 +5000,9 @@ public final class PowerManagerService extends SystemService
             pw.println("  mStayOnWhilePluggedInSetting=" + mStayOnWhilePluggedInSetting);
             pw.println("  mScreenBrightnessOverrideFromWindowManager="
                     + mScreenBrightnessOverrideFromWindowManager);
+            /* -----rk-code----- */
+            pw.println("  mScreenBrightnessDisplayId=" + mScreenBrightnessDisplayId);
+            /* ---------- */
             pw.println("  mUserActivityTimeoutOverrideFromWindowManager="
                     + mUserActivityTimeoutOverrideFromWindowManager);
             pw.println("  mUserInactiveOverrideFromWindowManager="
@@ -5533,6 +5583,26 @@ public final class PowerManagerService extends SystemService
                 case MSG_ATTENTIVE_TIMEOUT:
                     handleAttentiveTimeout();
                     break;
+                //----rk-code----
+                case MSG_SLEEP_DELAY_DREAM:
+
+                    // Phase 3: Update power state of all PowerGroups.
+                    final boolean powerGroupsBecameReady = updatePowerGroupsLocked(msg.arg1);
+
+                    // Phase 4: Update dream state (depends on power group ready signal).
+                    updateDreamLocked(msg.arg1, powerGroupsBecameReady);
+
+                    // Phase 5: Send notifications, if needed.
+                    finishWakefulnessChangeIfNeededLocked();
+
+                    // Phase 6: Update suspend blocker.
+                    // Because we might release the last suspend blocker here, we need to make sure
+                    // we finished everything else first!
+                    updateSuspendBlockerLocked();
+
+                    mUpdatePowerStateInProgressSleep=false;
+                    break;
+                //--------------
             }
 
             return true;
@@ -7205,6 +7275,13 @@ public final class PowerManagerService extends SystemService
             }
             setScreenBrightnessOverrideFromWindowManagerInternal(screenBrightness);
         }
+
+        /* -----rk-code----- */
+        @Override
+        public void setScreenBrightnessDisplayIdFromWindowManager(int displayId) {
+            setScreenBrightnessDisplayIdFromWindowManagerInternal(displayId);
+        }
+        /* ---------- */
 
         @Override
         public void setDozeOverrideFromDreamManager(int screenState, int screenBrightness) {

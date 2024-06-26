@@ -19,6 +19,9 @@ import android.Manifest;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.content.Context;
+/* -----rk-code----- */
+import android.content.pm.PackageManager;
+/* ---------- */
 import android.hardware.light.HwLight;
 import android.hardware.light.HwLightState;
 import android.hardware.light.ILights;
@@ -31,6 +34,9 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+/* -----rk-code----- */
+import android.os.SystemProperties;
+/* ---------- */
 import android.os.Trace;
 import android.provider.Settings;
 import android.util.Slog;
@@ -196,12 +202,22 @@ public class LightsService extends SystemService {
                     pw.println("Service: hidl");
                 }
 
-                pw.println("Lights:");
+                /* ----------rk-code--------- */
+                pw.println("LightsById:");
                 for (int i = 0; i < mLightsById.size(); i++) {
                     final LightImpl light = mLightsById.valueAt(i);
-                    pw.println(String.format("  Light id=%d ordinal=%d color=%08x",
-                            light.mHwLight.id, light.mHwLight.ordinal, light.getColor()));
+                    pw.println(String.format("  Light id=%d ordinal=%d color=%08x, type=%d",
+                            light.mHwLight.id, light.mHwLight.ordinal, light.getColor(), light.mHwLight.type));
                 }
+                pw.println("LightsByTypes:");
+                for (int i = 0; i < mLightsByType.length; i++) {
+                    final LightImpl light = mLightsByType[i];
+                    if (light != null) {
+                        pw.println(String.format("  Light id=%d ordinal=%d color=%08x, type=%d",
+                                light.mHwLight.id, light.mHwLight.ordinal, light.getColor(), light.mHwLight.type));
+                    }
+                }
+                /*------------------------ */
 
                 pw.println("Session clients:");
                 for (Session session : mSessions) {
@@ -441,6 +457,29 @@ public class LightsService extends SystemService {
         private boolean mVrModeEnabled;
         private boolean mUseLowPersistenceForVR;
         private boolean mInitialized;
+
+        /* -----rk-code----- */
+        @Override
+        public String toString() {
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(TAG + " = {");
+            stringBuilder.append("mHwLight{id=" + mHwLight.id + ", ordinal = " + mHwLight.ordinal + ", type = " + mHwLight.type + "}");
+            stringBuilder.append(",");
+            stringBuilder.append(", mColor=" + mColor);
+            stringBuilder.append(", mMode=" + mMode);
+            stringBuilder.append(", mOnMS=" + mOnMS);
+            stringBuilder.append(", mOffMS=" + mOffMS);
+            stringBuilder.append(", mFlashing=" + mFlashing);
+            stringBuilder.append(", mBrightnessMode=" + mBrightnessMode);
+            stringBuilder.append(", mLastBrightnessMode=" + mLastBrightnessMode);
+            stringBuilder.append(", mLastColor=" + mLastColor);
+            stringBuilder.append(", mVrModeEnabled=" + mVrModeEnabled);
+            stringBuilder.append(", mUseLowPersistenceForVR=" + mUseLowPersistenceForVR);
+            stringBuilder.append(", mInitialized=" + mInitialized);
+            stringBuilder.append("}");
+            return stringBuilder.toString();
+        }
+        /* ---------- */
     }
 
     public LightsService(Context context) {
@@ -465,10 +504,12 @@ public class LightsService extends SystemService {
         }
 
         for (int i = mLightsById.size() - 1; i >= 0; i--) {
-            final int type = mLightsById.keyAt(i);
+            /* ----------rk-code--------- */
+            final int type = mLightsById.valueAt(i).mHwLight.type;
             if (0 <= type && type < mLightsByType.length) {
                 mLightsByType[type] = mLightsById.valueAt(i);
             }
+            /*------------------------ */
         }
     }
 
@@ -519,6 +560,21 @@ public class LightsService extends SystemService {
                 return null;
             }
         }
+
+        // ----rk-code---------
+        @Override
+        public LogicalLight getLightWithDisplay(int physicalDisplayId, int lightType) {
+            if (mLightsById != null && 0 <= physicalDisplayId && 0 <= lightType && lightType < mLightsByType.length) {
+                for (int i = 0; i < mLightsById.size(); i++) {
+                    LightImpl lightImpl = mLightsById.valueAt(i);
+                    if (lightImpl.mHwLight.id == physicalDisplayId && lightImpl.mHwLight.type == lightType) {
+                        return lightImpl;
+                    }
+                }
+            }
+            return null;
+        }
+        // -------------------
     };
 
     private static class VintfHalCache implements Supplier<ILights>, IBinder.DeathRecipient {

@@ -44,7 +44,9 @@ public class ITvInputSessionWrapper extends ITvInputSession.Stub implements Hand
     private static final String TAG = "TvInputSessionWrapper";
 
     private static final int EXECUTE_MESSAGE_TIMEOUT_SHORT_MILLIS = 50;
-    private static final int EXECUTE_MESSAGE_TUNE_TIMEOUT_MILLIS = 2000;
+    //============================rk midify it==========================
+    private static final int EXECUTE_MESSAGE_TUNE_TIMEOUT_MILLIS = 5000;
+    //==================================================================
     private static final int EXECUTE_MESSAGE_TIMEOUT_LONG_MILLIS = 5 * 1000;
 
     private static final int DO_RELEASE = 1;

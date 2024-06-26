@@ -4182,6 +4182,11 @@ public final class TvInputManagerService extends SystemService {
                             sessionState.session.notifyTvMessage(type, data);
                         //-----------------------rk code----------
                         } else if (null != inputId && inputId.startsWith("com.example.partnersupportsampletvinput/.SampleTvInputService/")) {
+                            //Slog.w(TAG, "onTvMessage " + sessionState+", " + sessionState.session);
+                            if (sessionState.session == null) {
+                                Slog.e(TAG, "onTvMessage and sessionState.session is null");
+                                continue;
+                            }
                             Slog.w(TAG, "onTvMessage " + type+", " + data);
                             sessionState.session.notifyTvMessage(type, data);
                         //----------------------------------------

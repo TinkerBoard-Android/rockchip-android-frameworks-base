@@ -41,6 +41,11 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Objects;
 
+/* -------rk-code----- */
+import android.os.SystemProperties;
+import android.os.UserManager;
+/* ------------------- */
+
 /**
  * Describes how a logical display is configured.
  * <p>
@@ -523,7 +528,7 @@ final class LogicalDisplay {
             mBaseDisplayInfo.thermalRefreshRateThrottling = mThermalRefreshRateThrottling;
             mBaseDisplayInfo.thermalBrightnessThrottlingDataId = mThermalBrightnessThrottlingDataId;
             //-----rk-code-----//
-            if(SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")) {
+            if(SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")||SystemProperties.get("ro.board.platform").equals("rk3576")) {
                 if (deviceInfo.type == Display.TYPE_EXTERNAL) {
                     String mPhysicalDisplayId = deviceInfo.uniqueId.split(":")[1];
                     String property = "persist.sys.rotation.einit-" + mPhysicalDisplayId;
@@ -869,7 +874,7 @@ final class LogicalDisplay {
             mTempDisplayRect.offset(-mDisplayOffsetY, mDisplayOffsetX);
         }
         //-----rk-code-----//
-        if (SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")) {
+        if (SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")||SystemProperties.get("ro.board.platform").equals("rk3576")) {
             if (displayDeviceInfo.type == Display.TYPE_EXTERNAL) {
                 String mPhysicalDisplayId = device.getDisplayDeviceInfoLocked().uniqueId.split(":")[1];
                 String property="persist.sys.rotation.efull-"+mPhysicalDisplayId;
@@ -1117,6 +1122,16 @@ final class LogicalDisplay {
      * Gets the name of display group to which the display is assigned.
      */
     public String getDisplayGroupNameLocked() {
+        /* -------rk-code----- */
+        // AAOS MUMD: assign DisplayGroupName to physical display, so every physical has own displaygroup
+        if(mDisplayGroupName == null && "true".equals(SystemProperties.get("ro.fw.mu.headless_system_user")) && "car".equals(SystemProperties.get("ro.target.product"))){
+            DisplayDeviceInfo deviceInfo = mPrimaryDisplayDevice != null ? mPrimaryDisplayDevice.getDisplayDeviceInfoLocked():null;
+            if(deviceInfo != null && (deviceInfo.type == Display.TYPE_EXTERNAL || deviceInfo.type == Display.TYPE_INTERNAL)){
+                mDisplayGroupName =  Layout.DEFAULT_DISPLAY_GROUP_NAME_PASSENGER+mDisplayId;
+            }
+        }
+        /* ------------------- */
+
         return mDisplayGroupName;
     }
 

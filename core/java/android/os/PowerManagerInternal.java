@@ -107,6 +107,18 @@ public abstract class PowerManagerInternal {
      */
     public abstract void setScreenBrightnessOverrideFromWindowManager(float brightness);
 
+    /* -----rk-code----- */
+    /**
+     * Used by the window manager to override the screen brightness displayId based on the
+     * current foreground activity.
+     *
+     * This method must only be called by the window manager.
+     *
+     * @param brightness The overridden displayId, or Float.NaN to disable the override.
+     */
+    public abstract void setScreenBrightnessDisplayIdFromWindowManager(int displayId);
+    /* ---------- */
+
     /**
      * Used by the window manager to override the user activity timeout based on the
      * current foreground activity.  It can only be used to make the timeout shorter

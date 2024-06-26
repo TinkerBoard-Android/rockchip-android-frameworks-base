@@ -460,6 +460,12 @@ public abstract class DisplayManagerInternal {
         // Set to PowerManager.BRIGHTNESS_INVALID if there's no override.
         public float screenBrightnessOverride;
 
+        /* -----rk-code----- */
+        public int screenBrightnessDisplayId;
+
+        public SparseArray<Float> mScreenBrightnessArray;
+        /* ---------- */
+
         // An override of the screen auto-brightness adjustment factor in the range -1 (dimmer) to
         // 1 (brighter). Set to Float.NaN if there's no override.
         public float screenAutoBrightnessAdjustmentOverride;
@@ -498,6 +504,12 @@ public abstract class DisplayManagerInternal {
             blockScreenOn = false;
             dozeScreenBrightness = PowerManager.BRIGHTNESS_INVALID_FLOAT;
             dozeScreenState = Display.STATE_UNKNOWN;
+
+            /* -----rk-code----- */
+            screenBrightnessDisplayId = Display.INVALID_DISPLAY;
+            mScreenBrightnessArray = new SparseArray<Float>();
+            /* ---------- */
+
         }
 
         public DisplayPowerRequest(DisplayPowerRequest other) {

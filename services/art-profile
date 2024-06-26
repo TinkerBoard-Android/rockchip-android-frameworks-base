@@ -9015,6 +9015,7 @@ HSPLcom/android/server/power/PowerManagerService$LocalService;-><init>(Lcom/andr
 HSPLcom/android/server/power/PowerManagerService$LocalService;->getLowPowerState(I)Landroid/os/PowerSaveState;
 HSPLcom/android/server/power/PowerManagerService$LocalService;->registerLowPowerModeObserver(Landroid/os/PowerManagerInternal$LowPowerModeListener;)V
 HSPLcom/android/server/power/PowerManagerService$LocalService;->setScreenBrightnessOverrideFromWindowManager(F)V
+HSPLcom/android/server/power/PowerManagerService$LocalService;->setScreenBrightnessDisplayIdFromWindowManager(I)V
 HSPLcom/android/server/power/PowerManagerService$LocalService;->setUserActivityTimeoutOverrideFromWindowManager(J)V
 HSPLcom/android/server/power/PowerManagerService$LocalService;->uidActive(I)V
 HSPLcom/android/server/power/PowerManagerService$LocalService;->uidIdle(I)V
@@ -13830,4 +13831,3 @@ Lcom/android/server/rkdisplay/RkDisplayModes$RkPhysicalDisplayInfo;
 Lcom/android/server/rkdisplay/RkDisplayModes$RkColorCapacityInfo;
 Lcom/android/server/rkdisplay/RkDisplayModes$RkConnectorInfo;
 Lcom/android/server/rkdisplay/RkDisplayModes;
-

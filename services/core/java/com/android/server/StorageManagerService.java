@@ -220,6 +220,9 @@ class StorageManagerService extends IStorageManager.Stub
     private final Set<Integer> mCeStoragePreparedUsers = new ArraySet<>();
 
     private volatile long mInternalStorageSize = 0;
+    //-----rk-code---------
+    private static boolean mGlobalAllUserUnlocked = false;
+    //---------------------
 
     public static class Lifecycle extends SystemService {
         private StorageManagerService mStorageManagerService;
@@ -281,6 +284,38 @@ class StorageManagerService extends IStorageManager.Stub
         public void onUserStarting(TargetUser user) {
             mStorageManagerService.snapshotAndMonitorLegacyStorageAppOp(user.getUserHandle());
         }
+
+        //-----rk-code---------
+        @Override
+        public void onUserUnlocked(@NonNull TargetUser user) {
+            if (mStorageManagerService.mIsAutomotive) {
+                UserManagerInternal umInternal = LocalServices.getService(UserManagerInternal.class);
+                List<UserInfo> currentUserInfos = umInternal.getUsers(false);
+                int countUnlockedUser = 0;
+                int countRunningUser = 0;
+                if (currentUserInfos != null && currentUserInfos.size() > 0) {
+                    for (UserInfo userInfo : currentUserInfos) {
+                        Slog.i(TAG, "userInfo = " + userInfo.toFullString());
+                        if (umInternal.isUserUnlocked(userInfo.id)) {
+                            countUnlockedUser++;
+                        }
+                        if (umInternal.isUserRunning(userInfo.id)) {
+                            countRunningUser++;
+                        }
+                    }
+                }
+                if (countRunningUser == countUnlockedUser) {
+                    mGlobalAllUserUnlocked = true;
+                    Slog.d(TAG, "all user unlocked, do resetIfBootedAndConnected!!!");
+                    mStorageManagerService.mHandler.removeMessages(H_RESET);
+                    mStorageManagerService.mHandler.obtainMessage(H_RESET).sendToTarget();
+                } else {
+                    mGlobalAllUserUnlocked = false;
+                    Slog.d(TAG, "countRunningUser = " + countRunningUser + ", countUnlockedUser = " + countUnlockedUser + ", wait next user unlock!");
+                }
+            }
+        }
+        //--------------------
     }
 
     private static final boolean DEBUG_OBB = false;
@@ -480,6 +515,15 @@ class StorageManagerService extends IStorageManager.Stub
      */
     public static final Pattern KNOWN_APP_DIR_PATHS = Pattern.compile(
             "(?i)(^/storage/[^/]+/(?:([0-9]+)/)?Android/(?:data|media|obb|sandbox)/)([^/]+)(/.*)?");
+
+
+    //--------------------rk-code----------------------
+    /** Automotive device unlockes users before system boot complete and this requires special
+     * handling as vold reset can lead into race conditions. When this is set, all users unlocked
+     * in {@code UserManager} level are unlocked after vold reset.
+     */
+    private final boolean mIsAutomotive;
+    //-------------------------------------------------
 
 
     private VolumeInfo findVolumeByIdOrThrow(String id) {
@@ -1543,9 +1587,9 @@ class StorageManagerService extends IStorageManager.Stub
                 Log.d(TAG,"-----for all public volume is visible-----");
                 vol.mountFlags |= VolumeInfo.MOUNT_FLAG_VISIBLE_FOR_WRITE;
             }
+            if(!mIsAutomotive)
+                vol.mountUserId = mCurrentUserId;
             //-------------------------------------------------
-
-            vol.mountUserId = mCurrentUserId;
             mHandler.obtainMessage(H_VOLUME_MOUNT, vol).sendToTarget();
 
         } else if (vol.type == VolumeInfo.TYPE_PRIVATE) {
@@ -1929,6 +1973,12 @@ class StorageManagerService extends IStorageManager.Stub
         if (WATCHDOG_ENABLE) {
             Watchdog.getInstance().addMonitor(this);
         }
+
+    //--------------------rk-code----------------------
+        //some product only usr automatic features but do not support multidisplay
+        mIsAutomotive = (context.getPackageManager().hasSystemFeature(
+            PackageManager.FEATURE_AUTOMOTIVE) && "true".equals(SystemProperties.get("ro.fw.mu.headless_system_user")));
+    //-------------------------------------------------
     }
 
     private void start() {
@@ -2099,7 +2149,17 @@ class StorageManagerService extends IStorageManager.Stub
     }
 
     private void handleBootCompleted() {
-        resetIfBootedAndConnected();
+        // ----rk-code---------
+        if(mIsAutomotive) {
+            if (mGlobalAllUserUnlocked) {
+                resetIfBootedAndConnected();
+            } else {
+                Slog.e(TAG, "----handleBootCompleted skip resetIfBootedAndConnected for AAOS,do it when all occupant unlocked---");
+            }
+        } else {
+            resetIfBootedAndConnected();
+        }
+        // -------------------
     }
 
     private String getDefaultPrimaryStorageUuid() {
@@ -4615,6 +4675,9 @@ class StorageManagerService extends IStorageManager.Stub
             pw.println();
             pw.println("Local unlocked users: " + mLocalUnlockedUsers);
             pw.println("System unlocked users: " + Arrays.toString(mSystemUnlockedUsers));
+            //--------------------rk-code----------------------
+            pw.println("isAutomotive:" + mIsAutomotive);
+            //-------------------------------------------------
         }
 
         synchronized (mObbMounts) {

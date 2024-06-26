@@ -3070,7 +3070,23 @@ public abstract class PackageManager {
      */
     @SdkConstant(SdkConstantType.FEATURE)
     public static final String FEATURE_RAM_NORMAL = "android.hardware.ram.normal";
+//-----rk-code-------
+    /**
+     * Feature for {@link #getSystemAvailableFeatures} and
+     * {@link #hasSystemFeature}: The device includes rockchip hdmi settings.
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.FEATURE)
+    public static final String FEATURE_ROCKCHIP_DISPLAY = "rockchip.software.display";
 
+    /**
+     * Feature for {@link #getSystemAvailableFeatures} and
+     * {@link #hasSystemFeature}: The device includes rockchip audio settings.
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.FEATURE)
+    public static final String FEATURE_ROCKCHIP_AUDIO = "rockchip.software.audio";
+//-------------- 
     /**
      * Feature for {@link #getSystemAvailableFeatures} and
      * {@link #hasSystemFeature}: The device can record audio via a
@@ -11135,4 +11151,17 @@ public abstract class PackageManager {
         throw new UnsupportedOperationException(
                 "relinquishUpdateOwnership not implemented in subclass");
     }
+    //rk code ------
+    /**
+     * @hide
+     */
+    @SuppressWarnings("HiddenAbstractMethod")
+    public abstract void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode);
+
+    /**
+     * @hide
+     */
+    @SuppressWarnings("HiddenAbstractMethod")
+    public abstract int getPackageUiModeType(String packageName);
+    //----------------//
 }

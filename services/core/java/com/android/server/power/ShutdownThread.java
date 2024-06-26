@@ -491,7 +491,14 @@ public final class ShutdownThread extends Thread {
                     @Override
                     public void performReceive(Intent intent, int resultCode, String data,
                             Bundle extras, boolean ordered, boolean sticky, int sendingUser) {
-                        mHandler.post(ShutdownThread.this::actionDone);
+                        //----rk-code----
+                        boolean mRkebook = SystemProperties.getBoolean("persist.sys.rk-ebook", false);
+                        //---------------
+                        if(mRkebook){
+                            mHandler.postDelayed(ShutdownThread.this::actionDone,1000);
+                        }else{
+                            mHandler.post(ShutdownThread.this::actionDone);
+                        }
                     }
                 }, null, UserHandle.USER_ALL, null, null, null);
 

@@ -104,6 +104,7 @@ cc_library_static {
         "rkbox/rklog.cpp",
         "com_android_server_RKBoxService.cpp",
         "com_android_server_rkdisplay_RkDisplayModes.cpp",
+        "com_android_server_audio_RkAudioSetting.cpp",
         "onload.cpp",
         ":lib_cachedAppOptimizer_native",
         ":lib_gameManagerService_native",
@@ -118,6 +119,7 @@ cc_library_static {
         "system/memory/libmeminfo/include",
         //-----------------------rk code----------
         "hardware/rockchip/libhardware_rockchip/include/",
+        "vendor/rockchip/hardware/interfaces",
         //----------------------------------------
     ],
 
@@ -245,6 +247,7 @@ cc_defaults {
         //-----------------------rk code----------
         "rockchip.hardware.tv.input-V1-ndk",
         "rockchip.hardware.tv.input@1.0",
+        "librksoundsetting",
         //----------------------------------------
     ],
 

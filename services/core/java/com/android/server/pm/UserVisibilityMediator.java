@@ -37,6 +37,7 @@ import android.annotation.UserIdInt;
 import android.os.Handler;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.SystemProperties;
 import android.util.DebugUtils;
 import android.util.Dumpable;
 import android.util.EventLog;
@@ -284,6 +285,12 @@ public final class UserVisibilityMediator implements Dumpable {
                                 userId, profileGroupId);
                     }
                     mStartedVisibleProfileGroupIds.put(userId, profileGroupId);
+                    //-----rk-code-----//
+                    if (SystemProperties.get("ro.target.product").equals("car") && mStartedInvisibleProfileUserIds != null) {
+                        Slogf.d(TAG, "mStartedInvisibleProfileUserIds != null, remove userId[" + userId + "]!");
+                        mStartedInvisibleProfileUserIds.remove(Integer.valueOf(userId));
+                    }
+                    //-----------------//
                     break;
                 case USER_START_MODE_BACKGROUND:
                     if (mStartedInvisibleProfileUserIds != null
@@ -376,6 +383,12 @@ public final class UserVisibilityMediator implements Dumpable {
 
         if (isProfile(userId, profileGroupId)) {
             if (displayId != DEFAULT_DISPLAY) {
+                //-----rk-code-----//
+                if (SystemProperties.get("ro.target.product", "").equals("car")) {
+                    Slogf.w(TAG, "In AAOS, profile[" + userId + "] and display[" + displayId + "] will be start in secondary display");
+                    return USER_ASSIGNMENT_RESULT_SUCCESS_VISIBLE;
+                }
+                //-----------------//
                 Slogf.w(TAG, "canStartUserLocked(%d, %d, %s, %d) failed: cannot start profile user "
                         + "on secondary display", userId, profileGroupId,
                         userStartModeToString(userStartMode), displayId);
@@ -470,6 +483,12 @@ public final class UserVisibilityMediator implements Dumpable {
             // Profile can only start in the same display as parent. And for simplicity,
             // that display must be the DEFAULT_DISPLAY.
             if (displayId != Display.DEFAULT_DISPLAY) {
+                //-----rk-code-----//
+                if (SystemProperties.get("ro.target.product", "").equals("car")) {
+                    Slogf.w(TAG, "In AAOS, profile user[" + userId + "] can started in the other display[" + displayId + "]!");
+                    return SECONDARY_DISPLAY_MAPPING_NEEDED;
+                }
+                //-----------------//
                 Slogf.w(TAG, "Profile user can only be started in the default display");
                 return SECONDARY_DISPLAY_MAPPING_FAILED;
 
@@ -756,6 +775,16 @@ public final class UserVisibilityMediator implements Dumpable {
                 profileGroupId = mStartedVisibleProfileGroupIds.get(userId, NO_PROFILE_GROUP_ID);
             }
             if (isProfile(userId, profileGroupId)) {
+                //-----rk-code-----//
+                boolean ret = false;
+                if (SystemProperties.get("ro.target.product").equals("car") && UserManager.isHeadlessSystemUserMode()) {
+                    ret = isFullUserVisibleOnBackgroundLocked(userId, displayId);
+                    Slogf.d(TAG, "In AAOS MUMD, isFullUserVisibleOnBackgroundLocked with userId[" + userId + "], no profileGroupId[" + profileGroupId + "]! ret = " + ret);
+                    if (ret) {
+                        return ret;
+                    }
+                }
+                //-----------------//
                 return isFullUserVisibleOnBackgroundLocked(profileGroupId, displayId);
             }
             return isFullUserVisibleOnBackgroundLocked(userId, displayId);
@@ -881,6 +910,12 @@ public final class UserVisibilityMediator implements Dumpable {
                     continue;
                 }
                 int userId = mUsersAssignedToDisplayOnStart.keyAt(i);
+                //-----rk-code-----//
+                if ("car".equals(SystemProperties.get("ro.target.product")) && UserManager.isHeadlessSystemUserMode()) {
+                    Slogf.d(TAG, "In AAOS, getUserAssignedToDisplay userId(" + userId + ")'s displayId = " + displayId + " is equals!");
+                    return userId;
+                }
+                //-----------------//
                 if (!isStartedVisibleProfileLocked(userId)) {
                     return userId;
                 } else if (DBG) {

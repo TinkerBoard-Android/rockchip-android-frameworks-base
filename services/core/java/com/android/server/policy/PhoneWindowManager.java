@@ -387,6 +387,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
       */
     public static final int TOAST_WINDOW_TIMEOUT = 3500 + TOAST_WINDOW_ANIM_BUFFER;
 
+    //----rk-code----
+    public static final int SLEEP_SCREEN_DREAM_DELAY = 900;
+    //---------------
+
     /**
      * Action for launching assistant in retail mode
      */
@@ -474,6 +478,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private Supplier<GlobalActions> mGlobalActionsFactory;
     private GlobalActions mGlobalActions;
     private Handler mHandler;
+
+    //----rk-code----
+    private boolean mRkebook;
+    //---------------
 
     // FIXME This state is shared between the input reader and handler thread.
     // Technically it's broken and buggy but it has been like this for many years
@@ -687,6 +695,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private static final int MSG_RINGER_TOGGLE_CHORD = 24;
     private static final int MSG_SWITCH_KEYBOARD_LAYOUT = 25;
     private static final int MSG_LOG_KEYBOARD_SYSTEM_EVENT = 26;
+    //----rk-code----
+    private static final int MSG_SLEEP_SHOW_DREAM = 27;
+    //---------------
 
     private class PolicyHandler extends Handler {
         @Override
@@ -1044,6 +1055,20 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 case SHORT_PRESS_POWER_NOTHING:
                     break;
                 case SHORT_PRESS_POWER_GO_TO_SLEEP:
+                    //----rk-code----
+                    if(mRkebook) {
+                        mDefaultDisplayPolicy.showScreenDream();
+                        mHandler.removeMessages(MSG_SLEEP_SHOW_DREAM);
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Slog.d(TAG, "show screen dream, delay to sleep.");
+                                sleepDefaultDisplayFromPowerButton(eventTime, 0);
+                            }
+                        }, mHandler.obtainMessage(MSG_SLEEP_SHOW_DREAM), SLEEP_SCREEN_DREAM_DELAY);
+                        break;
+                    }
+                    //---------------
                     sleepDefaultDisplayFromPowerButton(eventTime, 0);
                     break;
                 case SHORT_PRESS_POWER_REALLY_GO_TO_SLEEP:
@@ -2294,6 +2319,14 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         initKeyCombinationRules();
         initSingleKeyGestureRules();
         mSideFpsEventHandler = new SideFpsEventHandler(mContext, mHandler, mPowerManager);
+
+        //----rk-code----
+        mRkebook = SystemProperties.getBoolean("persist.sys.rk-ebook", false);
+        if(mRkebook) {
+            filter = new IntentFilter(Intent.ACTION_SHUTDOWN);
+            mContext.registerReceiver(mShutdownReceiver, filter);
+        }
+        //---------------
     }
 
     private void initKeyCombinationRules() {
@@ -4958,6 +4991,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     };
 
+    //----rk-code----
+    BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(Intent.ACTION_SHUTDOWN.equals(intent.getAction())){
+                mDefaultDisplayPolicy.showScreenPoweroff();
+            }
+        }
+    };
+    //---------------
+
     @Override
     public void startedWakingUpGlobal(@WakeReason int reason) {
 
@@ -4968,6 +5012,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
     }
 
+    //----rk-code----
+    @Override
+    public void showSleepDream() {
+        mDefaultDisplayPolicy.showScreenDream();
+    }
+    //---------------
     @Override
     public void startedGoingToSleepGlobal(@PowerManager.GoToSleepReason int reason) {
         mDeviceGoingToSleep = true;
@@ -4991,7 +5041,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if (displayGroupId != Display.DEFAULT_DISPLAY_GROUP) {
             return;
         }
-
+        //----rk-code----
+        if(mRkebook) {
+            mDefaultDisplayPolicy.showScreenDream();
+        }
+        //---------------
         mRequestedOrSleepingDefaultDisplay = true;
 
         if (mKeyguardDelegate != null) {
@@ -5013,6 +5067,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             WindowManagerPolicyConstants.translateSleepReasonToOffReason(
                                     pmSleepReason)) + ")");
         }
+
         MetricsLogger.histogram(mContext, "screen_timeout", mLockScreenTimeout / 1000);
 
         mRequestedOrSleepingDefaultDisplay = false;
@@ -5051,7 +5106,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
         EventLogTags.writeScreenToggled(1);
 
-
+        //----rk-code----
+        if(mRkebook) {
+            mDefaultDisplayPolicy.hideScreenDream();
+        }
+        //---------------
         mDefaultDisplayPolicy.setAwake(true);
 
         // Since goToSleep performs these functions synchronously, we must

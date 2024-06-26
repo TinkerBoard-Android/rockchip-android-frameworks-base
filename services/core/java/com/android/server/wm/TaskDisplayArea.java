@@ -44,7 +44,13 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ActivityInfo.ScreenOrientation;
 import android.content.res.Configuration;
 import android.graphics.Color;
+/* -------rk-code----- */
+import android.os.SystemProperties;
+/* ------------------- */
 import android.os.UserHandle;
+/* -------rk-code----- */
+import android.os.UserManager;
+/* ------------------- */
 import android.util.IntArray;
 import android.util.Slog;
 import android.view.RemoteAnimationTarget;
@@ -1849,7 +1855,10 @@ final class TaskDisplayArea extends DisplayArea<WindowContainer> {
                                         null /* options */,
                                         null /* sourceTask */,
                                         0 /* launchFlags */);
-                task.reparent(launchRoot == null ? toDisplayArea : launchRoot, POSITION_TOP);
+                /* -------rk-code----- */
+                boolean isAutoFeatureAndHeadlessMode = UserManager.isHeadlessSystemUserMode() && "car".equals(SystemProperties.get("ro.target.product"));
+                task.reparent(launchRoot == null ? toDisplayArea : launchRoot, isAutoFeatureAndHeadlessMode ? POSITION_BOTTOM :POSITION_TOP);
+                /* ------------------- */
 
                 // Set the windowing mode to undefined by default to let the root task inherited the
                 // windowing mode.

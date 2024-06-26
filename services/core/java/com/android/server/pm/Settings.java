@@ -4450,12 +4450,13 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                 if (ps.getPkg() == null) {
                     continue;
                 }
-                final boolean shouldMaybeInstall = ps.isSystem() &&
+                boolean isPrebundled = wasPrebundledPackageInstalledLPr(ps.getPackageName());
+                final boolean shouldMaybeInstall = (ps.isSystem() || isPrebundled) &&
                         !ArrayUtils.contains(disallowedPackages, ps.getPackageName()) &&
                         !ps.getPkgState().isHiddenUntilInstalled();
                 final boolean shouldReallyInstall = shouldMaybeInstall &&
                         (skipPackageAllowList || userTypeInstallablePackages.contains(
-                                ps.getPackageName()));
+                                ps.getPackageName()) || isPrebundled);
                 // Only system apps are initially installed.
                 ps.setInstalled(shouldReallyInstall, userHandle);
 

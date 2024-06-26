@@ -82,6 +82,9 @@ public class PowerGroup {
     private long mLastWakeTime;
     /** Timestamp (milliseconds since boot) of the last time the power group was put to sleep. */
     private long mLastSleepTime;
+    /* -----rk-code----- */
+    private int mScreenBrightnessDisplayId = Display.INVALID_DISPLAY;
+    /* ---------- */
 
     PowerGroup(int groupId, PowerGroupListener wakefulnessListener, Notifier notifier,
             DisplayManagerInternal displayManagerInternal, int wakefulness, boolean ready,
@@ -425,6 +428,16 @@ public class PowerGroup {
         return mDisplayPowerRequest.policy;
     }
 
+    /* -----rk-code----- */
+    public int getScreenBrightnessDisplayId() {
+        return mScreenBrightnessDisplayId;
+    }
+
+    public void setScreenBrightnessDisplayId(int screenBrightnessDisplayId) {
+        mScreenBrightnessDisplayId = screenBrightnessDisplayId;
+    }
+    /* ---------- */
+
     boolean updateLocked(float screenBrightnessOverride, boolean useProximitySensor,
             boolean boostScreenBrightness, int dozeScreenState, float dozeScreenBrightness,
             boolean overrideDrawWakeLock, PowerSaveState powerSaverState, boolean quiescent,
@@ -432,6 +445,24 @@ public class PowerGroup {
             boolean screenBrightnessBoostInProgress, boolean waitForNegativeProximity) {
         mDisplayPowerRequest.policy = getDesiredScreenPolicyLocked(quiescent, dozeAfterScreenOff,
                 bootCompleted, screenBrightnessBoostInProgress);
+
+        /* -----rk-code----- */
+        if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT && mScreenBrightnessDisplayId != Display.INVALID_DISPLAY) {
+            mDisplayPowerRequest.screenBrightnessDisplayId = mScreenBrightnessDisplayId;
+            mDisplayPowerRequest.mScreenBrightnessArray.put(mScreenBrightnessDisplayId, screenBrightnessOverride);
+            if (DEBUG) {
+                Slog.d(TAG, "----set mDisplayPowerRequest.screenBrightnessDisplayId to " + mScreenBrightnessDisplayId);
+            }
+        } else {
+            // mDisplayPowerRequest.mScreenBrightnessArray.remove(mDisplayPowerRequest.screenBrightnessDisplayId);
+            mScreenBrightnessDisplayId = Display.INVALID_DISPLAY;
+            mDisplayPowerRequest.screenBrightnessDisplayId = Display.INVALID_DISPLAY;
+            if (DEBUG) {
+                Slog.d(TAG, "----set mDisplayPowerRequest.screenBrightnessDisplayId to Display.INVALID_DISPLAY, policy = "+ mDisplayPowerRequest.policy);
+            }
+        }
+        /* ---------- */
+
         mDisplayPowerRequest.screenBrightnessOverride = screenBrightnessOverride;
         mDisplayPowerRequest.useProximitySensor = useProximitySensor;
         mDisplayPowerRequest.boostScreenBrightness = boostScreenBrightness;

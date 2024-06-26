@@ -35,4 +35,13 @@ public abstract class LightsManager {
      */
     @Nullable
     public abstract LogicalLight getLight(int id);
+
+    // ----rk-code---------
+    /**
+     * Returns the logical light with the given type and the given
+     * physicalDisplayId, if it exists, or null.
+     */
+    @Nullable
+    public abstract LogicalLight getLightWithDisplay(int physicalDisplayId, int type);
+    // -------------------
 }

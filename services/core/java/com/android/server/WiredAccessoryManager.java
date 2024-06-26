@@ -97,6 +97,11 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
 
     private final boolean mUseDevInputEventForAudioJack;
 
+    private boolean mHdmi0Registered = false;
+    private boolean mHdmi1Registered = false;
+    private boolean mDp0Registered = false;
+    private boolean mDp1Registered = false;
+
     public WiredAccessoryManager(Context context, InputManagerService inputManager) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WiredAccessoryManager");
@@ -109,6 +114,22 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
 
         mExtconObserver = new WiredAccessoryExtconObserver();
         mObserver = new WiredAccessoryObserver();
+        String registered = mAudioManager.getParameters("hdmi0_registered");
+        if (registered.equals("hdmi0_registered=1")) {
+            mHdmi0Registered = true;
+        }
+        registered = mAudioManager.getParameters("hdmi1_registered");
+        if (registered.equals("hdmi1_registered=1")) {
+            mHdmi1Registered = true;
+        }
+        registered = mAudioManager.getParameters("dp0_registered");
+        if (registered.equals("dp0_registered=1")) {
+            mDp0Registered = true;
+        }
+        registered = mAudioManager.getParameters("dp1_registered");
+        if (registered.equals("dp1_registered=1")) {
+            mDp1Registered = true;
+        }
     }
 
     private void onSystemReady() {
@@ -303,16 +324,16 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
                 outDevice = AudioManager.DEVICE_OUT_ANLG_DOCK_HEADSET;
             } else if (headset == BIT_USB_HEADSET_DGTL) {
                 outDevice = AudioManager.DEVICE_OUT_DGTL_DOCK_HEADSET;
-            } else if (headset == BIT_HDMI_AUDIO) {
+            } else if (headset == BIT_HDMI_AUDIO && mHdmi0Registered) {
                 Slog.d(TAG, "hdmi_0 plug");
                 outDevice = AudioManager.DEVICE_OUT_HDMI;
-            } else if (headset == BIT_HDMI_AUDIO_1) {
+            } else if (headset == BIT_HDMI_AUDIO_1 && mHdmi1Registered) {
                 Slog.d(TAG, "hdmi_1 plug");
                 outDevice = AudioManager.DEVICE_OUT_HDMI_1;
-            } else if (headset == BIT_DP_AUDIO) {
+            } else if (headset == BIT_DP_AUDIO && mDp0Registered) {
                 Slog.d(TAG, "dp_0 plug");
                 outDevice = AudioManager.DEVICE_OUT_SPDIF;
-            } else if (headset == BIT_DP_AUDIO_1) {
+            } else if (headset == BIT_DP_AUDIO_1 && mDp1Registered) {
                 Slog.d(TAG, "dp_1 plug");
                 outDevice = AudioManager.DEVICE_OUT_SPDIF_1;
             } else if (headset == BIT_HDMIIN_AUDIO) {

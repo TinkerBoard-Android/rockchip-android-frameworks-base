@@ -65,6 +65,10 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+//------rk-code---------
+import android.util.Log;
+//----------------------
+
 /**
  * Digital clock for the status bar.
  */
@@ -125,6 +129,11 @@ public class Clock extends TextView implements
                     updateClock();
                 }
             };
+
+    //------rk-code---------
+    private final String TAG = "SystemUI_Clock";
+    private float mStatusBarMaxH = getResources().getDimension(R.dimen.status_bar_height);
+    //----------------------
 
     public Clock(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -395,11 +404,30 @@ public class Clock extends TextView implements
                 0);
 
         float fontHeight = getPaint().getFontMetricsInt(null);
+        //------rk-code---------
+        int lpHeight = (int) Math.ceil(fontHeight);
+        int extendLpHeight = 4;
+        if (lpHeight >= mStatusBarMaxH && mStatusBarMaxH > 0) {
+            float textSize = getTextSize();
+            Log.w(TAG, "fontHeight:" + fontHeight + " > statusBarMaxH:" + mStatusBarMaxH
+                    + "===oldTextSize=" + textSize);
+            float newTextSize = mStatusBarMaxH * textSize / fontHeight - 1;
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, newTextSize);
+            fontHeight = getPaint().getFontMetricsInt(null);
+            Log.w(TAG, "set newTextSize=" + newTextSize + ", get newFontHeight=" + fontHeight);
+            lpHeight = (int) Math.ceil(mStatusBarMaxH);
+        } else if (lpHeight + extendLpHeight < mStatusBarMaxH) {
+            lpHeight += extendLpHeight;
+        }
+        //----------------------
         setLineHeight(TypedValue.COMPLEX_UNIT_PX, fontHeight);
 
         ViewGroup.LayoutParams lp = getLayoutParams();
         if (lp != null) {
-            lp.height = (int) Math.ceil(fontHeight);
+            //------rk-code---------
+            lp.height = lpHeight; //(int) Math.ceil(fontHeight);
+            Log.i(TAG, "statusBarMaxH=" + mStatusBarMaxH + ", lp.height=" + lp.height);
+            //----------------------
             setLayoutParams(lp);
         }
     }

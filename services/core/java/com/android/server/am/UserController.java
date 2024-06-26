@@ -608,6 +608,15 @@ class UserController implements Handler.Callback {
                 String parentId = (parent == null) ? "<null>" : String.valueOf(parent.id);
                 Slogf.d(TAG, "User " + userId + " (parent " + parentId
                         + "): delaying unlock because parent is locked");
+                //-----rk-code-----//
+                if (mInjector.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                    && UserManager.isHeadlessSystemUserMode()) {
+                    Slogf.d(TAG, "CarLauncher delay 500ms run maybeUnlockUser");
+                    mHandler.postDelayed(() -> {
+                        maybeUnlockUser(userId);
+                    }, 500);
+                }
+                //-----------------//
             }
         } else {
             maybeUnlockUser(userId);
@@ -644,6 +653,17 @@ class UserController implements Handler.Callback {
         synchronized (mLock) {
             // Do not proceed if unexpected state or a stale user
             if (mStartedUsers.get(userId) != uss || uss.state != STATE_RUNNING_LOCKED) {
+                //-----rk-code-----//
+                if (mInjector.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                    && UserManager.isHeadlessSystemUserMode()) {
+                    if (uss.state == STATE_BOOTING) {
+                        mHandler.postDelayed(() -> {
+                            Slogf.d(TAG, "finishUserUnlocking retry!!!");
+                            maybeUnlockUser(userId);
+                        }, 500);
+                    }
+                }
+                //-----------------//
                 return false;
             }
         }

@@ -1121,6 +1121,14 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
      */
     public void showRecentApps();
 
+    //----rk-code----
+    /**
+     * Show the sleep dream view.
+     * @hide
+     */
+    public void showSleepDream();
+    //---------------
+
     /**
      * Show the global actions dialog.
      * @hide

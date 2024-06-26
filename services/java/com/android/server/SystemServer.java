@@ -114,6 +114,9 @@ import com.android.server.art.DexUseManagerLocal;
 import com.android.server.attention.AttentionManagerService;
 import com.android.server.audio.AudioService;
 import com.android.server.biometrics.AuthService;
+//-----rk-code-----
+import com.android.server.audio.RkAudioSettingService;
+//-----------------
 import com.android.server.biometrics.BiometricService;
 import com.android.server.biometrics.sensors.face.FaceService;
 import com.android.server.biometrics.sensors.fingerprint.FingerprintService;
@@ -2126,13 +2129,25 @@ public final class SystemServer implements Dumpable {
             t.traceEnd();
 
             // $_rbox_$_modify_$_aisx: added 2017-06-27, add RkDisplayDeviceManagementService
-            try {
-                ServiceManager.addService("drm_device_management",
-                        new RkDisplayDeviceManagementService(context));
-            } catch (Throwable e) {
-                Slog.e(TAG, "Failure starting kDisplayDeviceManagement Service", e);
+	    // -----rk-code------- 
+            if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_ROCKCHIP_DISPLAY)) {
+                Slog.i(TAG, "addService drm_device_management");
+                try {
+                    ServiceManager.addService("drm_device_management",
+                            new RkDisplayDeviceManagementService(context));
+                } catch (Throwable e) {
+                    Slog.e(TAG, "Failure starting kDisplayDeviceManagement Service", e);
+                }
             }
-
+            if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_ROCKCHIP_AUDIO)) {
+                Slog.i(TAG, "addService rockchip_audio_setting");
+                try {
+                    ServiceManager.addService("rockchip_audio_setting", new RkAudioSettingService(context));
+                } catch (Throwable e) {
+                    Slog.e(TAG, "Failure starting RkAudioSettingManager Service", e);
+                }
+            }
+	    //-------------- 
             t.traceBegin("StartNotificationManager");
             mSystemServiceManager.startService(NotificationManagerService.class);
             SystemNotificationChannels.removeDeprecated(context);

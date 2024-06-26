@@ -189,7 +189,9 @@ final class LocalDisplayAdapter extends DisplayAdapter {
     }
 
     private final class LocalDisplayDevice extends DisplayDevice {
+        /* -----rk-code----- */
         private final long mPhysicalDisplayId;
+        /* ---------- */
         private final SparseArray<DisplayModeRecord> mSupportedModes = new SparseArray<>();
         private final ArrayList<Integer> mSupportedColorModes = new ArrayList<>();
         private final DisplayModeDirector.DesiredDisplayModeSpecs mDisplayModeSpecs =
@@ -245,8 +247,10 @@ final class LocalDisplayAdapter extends DisplayAdapter {
             mIsFirstDisplay = isFirstDisplay;
             updateDisplayPropertiesLocked(staticDisplayInfo, dynamicInfo, modeSpecs);
             mSidekickInternal = LocalServices.getService(SidekickInternal.class);
-            mBacklightAdapter = new BacklightAdapter(displayToken, isFirstDisplay,
+            // ----rk-code---------
+            mBacklightAdapter = new BacklightAdapter(displayToken, mPhysicalDisplayId, mIsFirstDisplay,
                     mSurfaceControlProxy);
+            // -------------------
             mActiveSfDisplayModeAtStartId = dynamicInfo.activeDisplayModeId;
         }
 
@@ -690,7 +694,7 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                         mInfo.flags |= DisplayDeviceInfo.FLAG_PRIVATE;
                     }
                     //-----rk-code-----//
-                    if (SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")) {
+                    if (SystemProperties.get("ro.board.platform").equals("rk356x")||SystemProperties.get("ro.board.platform").equals("rk3588")||SystemProperties.get("ro.board.platform").equals("rk3576")) {
                         String property="persist.sys.rotation.einit-" + mPhysicalDisplayId;
                         int rotation = SystemProperties.getInt(property, 0);
                         Slog.d(TAG, "mPhysicalDisplayId" + mPhysicalDisplayId + " set rotation " + rotation);
@@ -701,7 +705,7 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                         mInfo.rotation = rotation;
                     }
                     //-----------------//
-                    
+
                 }
 
                 if (DisplayCutout.getMaskBuiltInDisplayCutout(res, mInfo.uniqueId)) {
@@ -1533,6 +1537,7 @@ final class LocalDisplayAdapter extends DisplayAdapter {
         private final LogicalLight mBacklight;
         private final boolean mUseSurfaceControlBrightness;
         private final SurfaceControlProxy mSurfaceControlProxy;
+        private long mPhysicalDisplayId = -1;
 
         private boolean mForceSurfaceControl = false;
 
@@ -1555,6 +1560,26 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                 mBacklight = null;
             }
         }
+
+        // ----rk-code---------
+        BacklightAdapter(IBinder displayToken, long physicalDisplayId, boolean isFirstDisplay,
+                SurfaceControlProxy surfaceControlProxy) {
+            mDisplayToken = displayToken;
+            mSurfaceControlProxy = surfaceControlProxy;
+            this.mPhysicalDisplayId = physicalDisplayId;
+
+            mUseSurfaceControlBrightness = mSurfaceControlProxy
+                    .getDisplayBrightnessSupport(mDisplayToken);
+            Slog.i(TAG, "BacklightAdapter with physicalDisplayId(" + physicalDisplayId + ")");
+
+            if (!mUseSurfaceControlBrightness/* && isFirstDisplay */) {
+                LightsManager lights = LocalServices.getService(LightsManager.class);
+                mBacklight = lights.getLightWithDisplay((int)physicalDisplayId, LightsManager.LIGHT_ID_BACKLIGHT);
+            } else {
+                mBacklight = null;
+            }
+        }
+        // -------------------
 
         // Set backlight within min and max backlight values
         void setBacklight(float sdrBacklight, float sdrNits, float backlight, float nits) {

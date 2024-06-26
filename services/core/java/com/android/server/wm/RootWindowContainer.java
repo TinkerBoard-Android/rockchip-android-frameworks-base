@@ -118,6 +118,9 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
+/* -----rk-code----- */
+import android.os.SystemProperties;
+/* ---------- */
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
@@ -894,6 +897,20 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
                     || mScreenBrightnessOverride > PowerManager.BRIGHTNESS_MAX
                     ? PowerManager.BRIGHTNESS_INVALID_FLOAT : mScreenBrightnessOverride;
             int brightnessFloatAsIntBits = Float.floatToIntBits(brightnessOverride);
+            /* -----rk-code----- */
+            DisplayContent dc = getTopFocusedDisplayContent();
+            if (dc != null) {
+                WindowState focusWindow = dc.mCurrentFocus;
+                if (focusWindow != null) {
+                    if (focusWindow.mAttrs.screenBrightness < PowerManager.BRIGHTNESS_MIN
+                        || focusWindow.mAttrs.screenBrightness > PowerManager.BRIGHTNESS_MAX) {
+                        brightnessFloatAsIntBits = Float.floatToIntBits(PowerManager.BRIGHTNESS_INVALID_FLOAT);
+                    } else {
+                        brightnessFloatAsIntBits = Float.floatToIntBits(focusWindow.mAttrs.screenBrightness);
+                    }
+                }
+            }
+            /* ---------- */
             // Post these on a handler such that we don't call into power manager service while
             // holding the window manager lock to avoid lock contention with power manager lock.
             mHandler.obtainMessage(SET_SCREEN_BRIGHTNESS_OVERRIDE, brightnessFloatAsIntBits,
@@ -1117,6 +1134,9 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case SET_SCREEN_BRIGHTNESS_OVERRIDE:
+                    /* -----rk-code----- */
+                    mWmService.mPowerManagerInternal.setScreenBrightnessDisplayIdFromWindowManager(mTopFocusedDisplayId);
+                    /* ---------- */
                     mWmService.mPowerManagerInternal.setScreenBrightnessOverrideFromWindowManager(
                             Float.intBitsToFloat(msg.arg1));
                     break;
@@ -2575,7 +2595,22 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     }
 
     private void startSystemDecorations(final DisplayContent displayContent) {
-        startHomeOnDisplay(mCurrentUser, "displayAdded", displayContent.getDisplayId());
+        /* -----rk-code----- */
+        // Referencing the methods of resumeHomeActivity and startHomeOnEmptyDisplays,
+        // use mWmService.getUserAssignedToDisplay instead of mCurrentUser
+        // to launch secondary screen applications.
+        if ("car".equals(SystemProperties.get("ro.target.product")) && "true".equals(SystemProperties.get("ro.fw.mu.headless_system_user"))) {
+            int userId = mWmService.getUserAssignedToDisplay(displayContent.getDisplayId());
+            if(userId != mCurrentUser && userId != UserHandle.USER_NULL && userId != UserHandle.USER_SYSTEM){
+                Slog.w(TAG, "startSystemDecorations in display(" + displayContent.getDisplayId() + ") with userId(" + userId + ") when onDisplayAdded");
+                startHomeOnDisplay(userId, "displayAdded", displayContent.getDisplayId());
+            }else{
+                Slog.w(TAG, "AAOS MUMD, skip startHomeOnDisplay in onDisplayAdded() for userId="+userId+" display="+displayContent);
+            }
+        } else {
+            startHomeOnDisplay(mCurrentUser, "displayAdded", displayContent.getDisplayId());
+        }
+        /* ---------- */
         displayContent.getDisplayPolicy().notifyDisplayReady();
     }
 

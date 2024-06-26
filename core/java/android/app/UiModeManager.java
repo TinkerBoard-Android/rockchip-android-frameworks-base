@@ -27,6 +27,9 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.compat.annotation.UnsupportedAppUsage;
+//-----rk-code-----//
+import android.app.AppGlobals;
+//----------------//
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Binder;
@@ -115,6 +118,9 @@ public class UiModeManager {
         void onContrastChanged(@FloatRange(from = -1.0f, to = 1.0f) float contrast);
     }
 
+//-----rk-code-----//
+    private static final boolean DEBUG_UIMODE = false;
+//----------------//
     /**
      * Broadcast sent when the device's UI has switched to car mode, either
      * by being placed in a car dock or explicit action of the user.  After
@@ -637,6 +643,20 @@ public class UiModeManager {
     public int getCurrentModeType() {
         if (sGlobals != null) {
             try {
+//-----rk-code-----//
+                if (android.os.SystemProperties.get("ro.target.product", "unknown").equals("box")) {
+                    int uiMode = sGlobals.mService.getCurrentModeType();
+                    if (AppGlobals.getPackageManager() != null) {
+                        uiMode = AppGlobals.getPackageManager().getPackageUiModeType(getPackageName());
+                    }
+                    if (uiMode != -1) {
+                        if (DEBUG_UIMODE) {
+                            Slog.d(TAG, "uiMode = " + uiMode);
+                        }
+                        return uiMode;
+                    }
+                }
+//----------------//
                 return sGlobals.mService.getCurrentModeType();
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
@@ -644,6 +664,27 @@ public class UiModeManager {
         }
         return Configuration.UI_MODE_TYPE_NORMAL;
     }
+
+//-----rk-code-----//
+    private String getPackageName() {
+        try {
+            if (AppGlobals.getPackageManager() != null) {
+                String[] packageNames = AppGlobals.getPackageManager().getPackagesForUid(Binder.getCallingUid());
+                if(packageNames != null && packageNames.length > 0 && !packageNames[0].equals("")) {
+                    if (DEBUG_UIMODE) {
+                        Slog.d(TAG, "getPackageName : " + packageNames[0]);
+                    }
+                    return packageNames[0];
+                } else {
+                    return null;
+                }
+            }
+        } catch (RemoteException e) {
+            Slog.i(TAG, "remoteException " + e.getMessage());
+        }
+        return null;
+    }
+//----------------//
 
     /**
      * Sets the system-wide night mode.

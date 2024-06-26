@@ -39,6 +39,9 @@ import java.util.Objects;
  */
 public class Layout {
     public static final String DEFAULT_DISPLAY_GROUP_NAME = "";
+    /* -------rk-code----- */
+    public static final String DEFAULT_DISPLAY_GROUP_NAME_PASSENGER = "AAOS_Passenger";
+    /* ------------------- */
 
     private static final String TAG = "Layout";
 

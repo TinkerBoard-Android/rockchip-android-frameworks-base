@@ -52,7 +52,9 @@ import android.provider.MediaStore.MediaColumns;
 import android.provider.Settings;
 import android.provider.Settings.System;
 import android.util.Log;
-
+//-----rk-code-----//
+import android.content.pm.PackageManager;
+//-----------------//
 import com.android.internal.database.SortCursor;
 
 import java.io.File;
@@ -847,7 +849,13 @@ public class RingtoneManager {
             @Nullable VolumeShaper.Configuration volumeShaperConfig,
             boolean createLocalMediaPlayer) {
         try {
-            final Ringtone r = new Ringtone(context, true);
+            //-----rk-code-----//
+            boolean allowRemotePlayer = true;
+            if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
+                allowRemotePlayer = false;
+            }
+            final Ringtone r = new Ringtone(context, allowRemotePlayer);
+            //-----------------//
             if (streamType >= 0) {
                 //FIXME deprecated call
                 r.setStreamType(streamType);

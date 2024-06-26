@@ -3716,6 +3716,10 @@ public class WindowManagerService extends IWindowManager.Stub
                 // can choose where to stop the animation.
                 SystemProperties.set("service.bootanim.exit", "1");
                 mBootAnimationStopped = true;
+                // ----rk-code----
+                Settings.System.putInt(mContext.getContentResolver(), Settings.System.FORCE_TRAVERSAL_DISPLAY_LOCKED,
+                        1);
+                // ---------------
             }
 
             if (!mForceDisplayEnabled && !checkBootAnimationCompleteLocked()) {
@@ -3753,9 +3757,6 @@ public class WindowManagerService extends IWindowManager.Stub
                     + "that the display is ready.");
         }
 
-	//----rk-code----
-	Settings.System.putInt(mContext.getContentResolver(),Settings.System.FORCE_TRAVERSAL_DISPLAY_LOCKED,1);
-	//---------------
     }
 
     private boolean checkBootAnimationCompleteLocked() {

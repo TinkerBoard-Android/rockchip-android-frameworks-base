@@ -25714,6 +25714,248 @@ package android.media.audiofx {
     field public short preset;
   }
 
+  public class RockchipEqualizer extends android.media.audiofx.AudioEffect {
+    ctor public RockchipEqualizer(int, int);
+    method public int getCurrentPreset();
+    method public int getNumberOfPresets();
+    method @NonNull public String getPresetName(int);
+    method @NonNull public android.media.audiofx.RockchipEqualizer.Settings getProperties();
+    method public void setParameterListener(@NonNull java.util.concurrent.Executor, @NonNull android.media.audiofx.RockchipEqualizer.OnParameterChangeListener);
+    method public void setProperties(@NonNull android.media.audiofx.RockchipEqualizer.Settings);
+    method public void usePreset(int);
+    field public static final int PARAM_CURRENT_PRESET = 0; // 0x0
+    field public static final int PARAM_GET_NUM_OF_PRESETS = 1; // 0x1
+    field public static final int PARAM_GET_PRESET_NAME = 2; // 0x2
+    field public static final int PARAM_PROPERTIES = 3; // 0x3
+    field public static final int PARAM_STRING_SIZE_MAX = 32; // 0x20
+  }
+
+  public static interface RockchipEqualizer.OnParameterChangeListener {
+    method public void onParameterChange(@NonNull android.media.audiofx.RockchipEqualizer, int, int, int, int);
+  }
+
+  public static class RockchipEqualizer.Settings {
+    ctor public RockchipEqualizer.Settings();
+    ctor public RockchipEqualizer.Settings(@NonNull byte[]);
+    method public float getAgcEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Agc> getAgcs();
+    method public float getAutoGainEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.AutoGain> getAutoGains();
+    method public float getBassEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.BassEnhancer> getBassEnhancers();
+    method public float getBitRate();
+    method public float getChannels();
+    method public int getCurPreset();
+    method public float getDeesserEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Deesser> getDeessers();
+    method public float getEq10Enabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Eq> getEqs();
+    method public float getExciterEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Exciter> getExciters();
+    method public float getLink();
+    method public float getMaximizerEnalbed();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Maximizer> getMaximizers();
+    method public float getMbdrcEnabled();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Mbdrc> getMbdrcs();
+    method public float getSamplingRate();
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Speaker> getSpeakers();
+    method public void setAgcEnabled(float);
+    method public void setAgcs(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Agc>);
+    method public void setAutoGainEnabled(float);
+    method public void setAutoGains(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.AutoGain>);
+    method public void setBassEnabled(float);
+    method public void setBassEnhancers(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.BassEnhancer>);
+    method public void setBitRate(float);
+    method public void setChannels(float);
+    method public void setCurPreset(int);
+    method public void setDeesserEnabled(float);
+    method public void setDeessers(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Deesser>);
+    method public void setEq10Enabled(float);
+    method public void setEqs(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Eq>);
+    method public void setExciterEnabled(float);
+    method public void setExciters(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Exciter>);
+    method public void setLink(float);
+    method public void setMaximizerEnalbed(float);
+    method public void setMaximizers(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Maximizer>);
+    method public void setMbdrcEnabled(float);
+    method public void setMbdrcs(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Mbdrc>);
+    method public void setSamplingRate(float);
+    method public void setSpeakers(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Speaker>);
+    method @NonNull public byte[] toBytes();
+    field public static final int NUM_BANDS = 10; // 0xa
+    field public static final int NUM_CHANNELS = 2; // 0x2
+  }
+
+  public static class RockchipEqualizer.Settings.Agc {
+    ctor public RockchipEqualizer.Settings.Agc();
+    ctor public RockchipEqualizer.Settings.Agc(@NonNull java.nio.ByteBuffer);
+    method public float getAttackTime(float);
+    method public float getCompressStart(float);
+    method public float getExpandEnd(float);
+    method public float getHoldTime(float);
+    method public float getMaxGain(float);
+    method public float getMaxPeek(float);
+    method public float getNoiseThreshold(float);
+    method public float getReleaseTime(float);
+    method public void setAttackTime(float);
+    method public void setCompressStart(float);
+    method public void setExpandEnd(float);
+    method public void setHoldTime(float);
+    method public void setMaxGain(float);
+    method public void setMaxPeek(float);
+    method public void setNoiseThreshold(float);
+    method public void setReleaseTime(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.AutoGain {
+    ctor public RockchipEqualizer.Settings.AutoGain();
+    ctor public RockchipEqualizer.Settings.AutoGain(@NonNull java.nio.ByteBuffer);
+    method public float getAttackTime();
+    method public float getR128Steps();
+    method public float getR128Wins();
+    method public float getReleaseTime();
+    method public float getTargetIDb();
+    method public void setAttackTime(float);
+    method public void setR128Steps(float);
+    method public void setR128Wins(float);
+    method public void setReleaseTime(float);
+    method public void setTargetIDb(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.BassEnhancer {
+    ctor public RockchipEqualizer.Settings.BassEnhancer();
+    ctor public RockchipEqualizer.Settings.BassEnhancer(@NonNull java.nio.ByteBuffer);
+    method public float getAmountDb();
+    method public float getBlend();
+    method public float getDrive();
+    method public float getFloorActive();
+    method public float getFloorFreq();
+    method public float getFreq();
+    method public void setAmountDb(float);
+    method public void setBlend(float);
+    method public void setDrive(float);
+    method public void setFloorActive(float);
+    method public void setFloorFreq(float);
+    method public void setFreq(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Deesser {
+    ctor public RockchipEqualizer.Settings.Deesser();
+    ctor public RockchipEqualizer.Settings.Deesser(@NonNull java.nio.ByteBuffer);
+    method public float getF0();
+    method public float getThreshold();
+    method public void setF0(float);
+    method public void setThreshold(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Eq {
+    ctor public RockchipEqualizer.Settings.Eq();
+    ctor public RockchipEqualizer.Settings.Eq(@NonNull java.nio.ByteBuffer);
+    method @NonNull public java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Eq.EqBand> getBands();
+    method public void setBands(@NonNull java.util.Collection<android.media.audiofx.RockchipEqualizer.Settings.Eq.EqBand>);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Eq.EqBand {
+    ctor public RockchipEqualizer.Settings.Eq.EqBand();
+    ctor public RockchipEqualizer.Settings.Eq.EqBand(@NonNull java.nio.ByteBuffer);
+    method public float getBoost();
+    method public float getEnabled();
+    method public float getFc();
+    method public float getFilter();
+    method public float getQ();
+    method public void setBoost(float);
+    method public void setEnabled(float);
+    method public void setFc(float);
+    method public void setFilter(float);
+    method public void setQ(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Exciter {
+    ctor public RockchipEqualizer.Settings.Exciter();
+    ctor public RockchipEqualizer.Settings.Exciter(@NonNull java.nio.ByteBuffer);
+    method public float getCutoff();
+    method public float getDistortionAmount();
+    method public float getEventHarmonics();
+    method public float getMix();
+    method public void setCutoff(float);
+    method public void setDistortionAmount(float);
+    method public void setEventHarmonics(float);
+    method public void setMix(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Maximizer {
+    ctor public RockchipEqualizer.Settings.Maximizer();
+    ctor public RockchipEqualizer.Settings.Maximizer(@NonNull java.nio.ByteBuffer);
+    method public float getCeiling();
+    method public float getMaxThreshold();
+    method public float getRelease();
+    method public void setCeiling(float);
+    method public void setMaxThreshold(float);
+    method public void setRelease(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Mbdrc {
+    ctor public RockchipEqualizer.Settings.Mbdrc();
+    ctor public RockchipEqualizer.Settings.Mbdrc(@NonNull java.nio.ByteBuffer);
+    method public float getCrossBand();
+    method @NonNull public android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq getHighFreq();
+    method @NonNull public android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq getLowFreq();
+    method @NonNull public android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq getMedFreq1();
+    method @NonNull public android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq getMedFreq2();
+    method public void setCrossBand(@NonNull float);
+    method public void setHighFreq(@NonNull android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq);
+    method public void setLowFreq(@NonNull android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq);
+    method public void setMedFreq1(@NonNull android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq);
+    method public void setMedFreq2(@NonNull android.media.audiofx.RockchipEqualizer.Settings.Mbdrc.MbdrcFreq);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Mbdrc.MbdrcFreq {
+    ctor public RockchipEqualizer.Settings.Mbdrc.MbdrcFreq();
+    ctor public RockchipEqualizer.Settings.Mbdrc.MbdrcFreq(@NonNull java.nio.ByteBuffer);
+    method public float getAttackTime();
+    method public float getCompressStart();
+    method public float getDrcEnabled();
+    method public float getExpandEnd();
+    method public float getFreqEnd();
+    method public float getFreqStart();
+    method public float getGainDb();
+    method public float getHoldTime();
+    method public float getMaxGain();
+    method public float getMaxPeek();
+    method public float getNoiseThreshold();
+    method public float getReleaseTime();
+    method public void setAttackTime(float);
+    method public void setCompressStart(float);
+    method public void setDrcEnabled(float);
+    method public void setExpandEnd(float);
+    method public void setFreqEnd(float);
+    method public void setFreqStart(float);
+    method public void setGainDb(float);
+    method public void setHoldTime(float);
+    method public void setMaxGain(float);
+    method public void setMaxPeek(float);
+    method public void setNoiseThreshold(float);
+    method public void setReleaseTime(float);
+    method @NonNull public byte[] toBytes();
+  }
+
+  public static class RockchipEqualizer.Settings.Speaker {
+    ctor public RockchipEqualizer.Settings.Speaker();
+    ctor public RockchipEqualizer.Settings.Speaker(@NonNull java.nio.ByteBuffer);
+    method public float getPreGain();
+    method public void setPreGain(float);
+    method @NonNull public byte[] toBytes();
+  }
+
   public class Virtualizer extends android.media.audiofx.AudioEffect {
     ctor public Virtualizer(int, int) throws java.lang.IllegalArgumentException, java.lang.IllegalStateException, java.lang.RuntimeException, java.lang.UnsupportedOperationException;
     method public boolean canVirtualize(int, int) throws java.lang.IllegalArgumentException, java.lang.IllegalStateException, java.lang.UnsupportedOperationException;

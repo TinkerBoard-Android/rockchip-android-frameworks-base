@@ -49,6 +49,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.content.pm.UserInfo;
 import android.content.pm.UserInfo.UserInfoFlag;
 import android.content.pm.UserProperties;
@@ -3183,6 +3184,12 @@ public class UserManager {
      * @hide
      */
     public static boolean isVisibleBackgroundUsersEnabled() {
+        //-----rk-code-----//
+        if (SystemProperties.get("ro.target.product").equals("car")
+            && SystemProperties.get("ro.fw.mu.headless_system_user").equals("false")) {
+            return false;
+        }
+        //-----------------//
         return SystemProperties.getBoolean("fw.visible_bg_users",
                 Resources.getSystem()
                         .getBoolean(R.bool.config_multiuserVisibleBackgroundUsers));

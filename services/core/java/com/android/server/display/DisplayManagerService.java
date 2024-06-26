@@ -4386,6 +4386,35 @@ public final class DisplayManagerService extends SystemService {
                     final int id = displayGroup.getIdLocked(i);
                     final DisplayDevice displayDevice = mLogicalDisplayMapper.getDisplayLocked(
                             id).getPrimaryDisplayDeviceLocked();
+
+                    /* -----rk-code----- */
+                    boolean isFound = false;
+                    for (int arrayIndex = 0; arrayIndex < request.mScreenBrightnessArray.size(); arrayIndex++) {
+                        int mDisplayId = request.mScreenBrightnessArray.keyAt(arrayIndex);
+                        float screenBrightness = request.mScreenBrightnessArray.valueAt(arrayIndex);
+                        if (mDisplayId != Display.INVALID_DISPLAY && request.policy == DisplayPowerRequest.POLICY_BRIGHT) {
+                            LogicalDisplay compareLogicalDisplay = mLogicalDisplayMapper.getDisplayLocked(mDisplayId);
+                            if (compareLogicalDisplay == null) {
+                                continue;
+                            }
+                            DisplayDevice compareDisplayDevice = compareLogicalDisplay.getPrimaryDisplayDeviceLocked();
+                            if (compareDisplayDevice != null && compareDisplayDevice.equals(displayDevice)) {
+                                request.screenBrightnessOverride = screenBrightness;
+                                isFound = true;
+                                break;
+                            } else {
+                                continue;
+                            }
+                        }
+                    }
+                    if (!isFound) {
+                        request.screenBrightnessOverride = Float.NaN;
+                    }
+                    if (DEBUG) {
+                        Slog.i(TAG, "request.screenBrightnessOverride = " + request.screenBrightnessOverride + ", displayDevice.uniqueId = " + displayDevice.getUniqueId());
+                    }
+                    /* ---------- */
+
                     final int flags = displayDevice.getDisplayDeviceInfoLocked().flags;
                     if ((flags & DisplayDeviceInfo.FLAG_NEVER_BLANK) == 0) {
                         final DisplayPowerControllerInterface displayPowerController =

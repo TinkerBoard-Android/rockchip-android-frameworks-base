@@ -290,7 +290,7 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
 
     @AssistedInject
     public BrightnessController(
-            Context context,
+            @Assisted Context context,
             @Assisted ToggleSlider control,
             UserTracker userTracker,
             DisplayTracker displayTracker,
@@ -444,6 +444,6 @@ public class BrightnessController implements ToggleSlider.Listener, MirroredBrig
     @AssistedFactory
     public interface Factory {
         /** Create a {@link BrightnessController} */
-        BrightnessController create(ToggleSlider toggleSlider);
+        BrightnessController create(Context mContext, ToggleSlider toggleSlider);
     }
 }

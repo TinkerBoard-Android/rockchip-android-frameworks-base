@@ -240,6 +240,20 @@ public class DefaultCrossProfileIntentFiltersUtils {
                     .addDataType("*/*")
                     .build();
 
+    // ----rk-code----
+    /** Get content can be forwarded to parent user in AAOS. */
+    private static final DefaultCrossProfileIntentFilter GET_CONTENT_AAOS =
+            new DefaultCrossProfileIntentFilter.Builder(
+                    DefaultCrossProfileIntentFilter.Direction.TO_PARENT,
+                    /* flags= */ONLY_IF_NO_MATCH_FOUND,
+                    /* letsPersonalDataIntoProfile= */ false)
+                    .addAction(Intent.ACTION_GET_CONTENT)
+                    .addCategory(Intent.CATEGORY_DEFAULT)
+                    .addCategory(Intent.CATEGORY_OPENABLE)
+                    .addDataType("*/*")
+                    .build();
+    //-----------------//
+
     /** Pick images can be forwarded to parent user. */
     private static final DefaultCrossProfileIntentFilter ACTION_PICK_IMAGES =
             new DefaultCrossProfileIntentFilter.Builder(
@@ -273,6 +287,20 @@ public class DefaultCrossProfileIntentFiltersUtils {
                     .addDataType("*/*")
                     .build();
 
+    // ----rk-code----
+    /** Open document intent can be handled by either managed profile or its parent user in AAOS. */
+    private static final DefaultCrossProfileIntentFilter OPEN_DOCUMENT_AAOS =
+            new DefaultCrossProfileIntentFilter.Builder(
+                    DefaultCrossProfileIntentFilter.Direction.TO_PARENT,
+                    /* flags= */ONLY_IF_NO_MATCH_FOUND,
+                    /* letsPersonalDataIntoProfile= */ false)
+                    .addAction(Intent.ACTION_OPEN_DOCUMENT)
+                    .addCategory(Intent.CATEGORY_DEFAULT)
+                    .addCategory(Intent.CATEGORY_OPENABLE)
+                    .addDataType("*/*")
+                    .build();
+    //-----------------//
+
     /** Pick for any data type can be forwarded to parent user. */
     private static final DefaultCrossProfileIntentFilter ACTION_PICK_DATA =
             new DefaultCrossProfileIntentFilter.Builder(
@@ -284,6 +312,19 @@ public class DefaultCrossProfileIntentFiltersUtils {
                     .addDataType("*/*")
                     .build();
 
+    // ----rk-code----
+    /** Pick for any data type can be handled by either managed profile or its parent user in AAOS. */
+    private static final DefaultCrossProfileIntentFilter ACTION_PICK_DATA_AAOS =
+            new DefaultCrossProfileIntentFilter.Builder(
+                    DefaultCrossProfileIntentFilter.Direction.TO_PARENT,
+                    /* flags= */ONLY_IF_NO_MATCH_FOUND,
+                    /* letsPersonalDataIntoProfile= */ false)
+                    .addAction(Intent.ACTION_PICK)
+                    .addCategory(Intent.CATEGORY_DEFAULT)
+                    .addDataType("*/*")
+                    .build();
+    //-----------------//
+
     /** Pick without data type can be forwarded to parent user. */
     private static final DefaultCrossProfileIntentFilter ACTION_PICK_RAW =
             new DefaultCrossProfileIntentFilter.Builder(
@@ -293,6 +334,18 @@ public class DefaultCrossProfileIntentFiltersUtils {
                     .addAction(Intent.ACTION_PICK)
                     .addCategory(Intent.CATEGORY_DEFAULT)
                     .build();
+
+    // ----rk-code----
+    /** Pick without data type can be handled by either managed profile or its parent user in AAOS. */
+    private static final DefaultCrossProfileIntentFilter ACTION_PICK_RAW_AAOS =
+            new DefaultCrossProfileIntentFilter.Builder(
+                    DefaultCrossProfileIntentFilter.Direction.TO_PARENT,
+                    /* flags= */ONLY_IF_NO_MATCH_FOUND,
+                    /* letsPersonalDataIntoProfile= */ false)
+                    .addAction(Intent.ACTION_PICK)
+                    .addCategory(Intent.CATEGORY_DEFAULT)
+                    .build();
+    //-----------------//
 
     /** Speech recognition can be performed by primary user. */
     private static final DefaultCrossProfileIntentFilter RECOGNIZE_SPEECH =
@@ -629,4 +682,28 @@ public class DefaultCrossProfileIntentFiltersUtils {
                 CLONE_TO_PARENT_PHOTOPICKER_SELECTION
         );
     }
+
+    //-----rk-code-----//
+    public static List<DefaultCrossProfileIntentFilter> getDefaultManagedProfileFiltersAAOS() {
+        return Arrays.asList(
+                EMERGENCY_CALL_MIME,
+                EMERGENCY_CALL_DATA,
+                DIAL_MIME,
+                DIAL_DATA,
+                DIAL_RAW,
+                CALL_BUTTON,
+                SMS_MMS,
+                SET_ALARM,
+                MEDIA_CAPTURE,
+                RECOGNIZE_SPEECH,
+                ACTION_PICK_RAW_AAOS,
+                ACTION_PICK_DATA_AAOS,
+                OPEN_DOCUMENT_AAOS,
+                GET_CONTENT_AAOS,
+                USB_DEVICE_ATTACHED,
+                ACTION_SEND,
+                HOME,
+                MOBILE_NETWORK_SETTINGS);
+    }
+    //-----------------//
 }

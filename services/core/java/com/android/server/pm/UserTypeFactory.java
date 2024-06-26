@@ -48,6 +48,9 @@ import android.os.Bundle;
 import android.os.UserManager;
 import android.util.ArrayMap;
 import android.util.Slog;
+// -----rk-code-----//
+import android.os.SystemProperties;
+// -----------------//
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.XmlUtils;
@@ -100,7 +103,13 @@ public final class UserTypeFactory {
 
         builders.put(USER_TYPE_PROFILE_MANAGED, getDefaultTypeProfileManaged());
         builders.put(USER_TYPE_FULL_SYSTEM, getDefaultTypeFullSystem());
-        builders.put(USER_TYPE_FULL_SECONDARY, getDefaultTypeFullSecondary());
+        //-----rk-code-----//
+        if (("car".equals(SystemProperties.get("ro.target.product")))){
+            builders.put(USER_TYPE_FULL_SECONDARY, getDefaultTypeFullSecondaryForMUMD());
+        } else {
+            builders.put(USER_TYPE_FULL_SECONDARY, getDefaultTypeFullSecondary());
+        }
+        //-----------------//
         builders.put(USER_TYPE_FULL_GUEST, getDefaultTypeFullGuest());
         builders.put(USER_TYPE_FULL_DEMO, getDefaultTypeFullDemo());
         builders.put(USER_TYPE_FULL_RESTRICTED, getDefaultTypeFullRestricted());
@@ -233,6 +242,21 @@ public final class UserTypeFactory {
                 .setDefaultRestrictions(getDefaultSecondaryUserRestrictions());
     }
 
+    // -----rk-code-----//
+    /**
+     * Returns the Builder for the default {@link UserManager#USER_TYPE_FULL_SECONDARY}
+     * configuration in AAOS.
+     */
+    private static UserTypeDetails.Builder getDefaultTypeFullSecondaryForMUMD() {
+        return new UserTypeDetails.Builder()
+                .setName(USER_TYPE_FULL_SECONDARY)
+                .setBaseType(FLAG_FULL)
+                .setDefaultUserInfoPropertyFlags(FLAG_MAIN)
+                .setMaxAllowed(UNLIMITED_NUMBER_OF_USERS)
+                .setDefaultRestrictions(getDefaultSecondaryUserRestrictions());
+    }
+    // -----------------//
+
     /**
      * Returns the Builder for the default {@link UserManager#USER_TYPE_FULL_GUEST} configuration.
      */
@@ -332,7 +356,12 @@ public final class UserTypeFactory {
 
     private static List<DefaultCrossProfileIntentFilter>
             getDefaultManagedCrossProfileIntentFilter() {
-        return DefaultCrossProfileIntentFiltersUtils.getDefaultManagedProfileFilters();
+        // -----rk-code-----//
+        if (("car".equals(SystemProperties.get("ro.target.product"))))
+            return DefaultCrossProfileIntentFiltersUtils.getDefaultManagedProfileFiltersAAOS();
+        else
+        // -----------------//
+            return DefaultCrossProfileIntentFiltersUtils.getDefaultManagedProfileFilters();
     }
 
     private static List<DefaultCrossProfileIntentFilter> getDefaultCloneCrossProfileIntentFilter() {

@@ -42,6 +42,9 @@ applications that come with the platform
         <permission name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
         <permission name="android.permission.WRITE_MEDIA_STORAGE"/>
         <permission name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+        <!-- ======rk code====== -->
+        <permission name="android.permission.MANAGE_USERS" />
+        <!-- =================== -->
     </privapp-permissions>
 
     <privapp-permissions package="com.android.imsserviceentitlement">

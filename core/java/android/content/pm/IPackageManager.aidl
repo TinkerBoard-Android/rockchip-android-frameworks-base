@@ -801,4 +801,10 @@ interface IPackageManager {
     boolean[] canPackageQuery(String sourcePackageName, in String[] targetPackageNames, int userId);
 
     boolean waitForHandler(long timeoutMillis, boolean forBackgroundHandler);
+
+    //For UiMode rk code -----------------
+    void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode);
+
+    int getPackageUiModeType(String packageName);
+    // -----------------
 }
