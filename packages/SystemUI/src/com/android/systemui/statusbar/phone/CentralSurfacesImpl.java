@@ -2151,6 +2151,10 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
                 }
                 finishBarAnimations();
                 mNotificationsController.resetUserExpandedStates();
+            } else if (HIDE_NAVIGATION_BAR.equals(action)) {
+                hideNavigation();
+            } else if (SHOW_NAVIGATION_BAR.equals(action)) {
+                displayNavigation();
             }
             Trace.endSection();
         }
@@ -2160,6 +2164,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
         if (mNavigationBarView != null) {
             mNavigationBarController.onDisplayRemoved(mDisplayId);
+            SystemProperties.set("persist.fullscreen.enable", "true");
         }
         ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
         if (tempStatusBar != null){
@@ -2172,6 +2177,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
         if (mNavigationBarView == null) {
             createNavigationBar(mRegisterStatusBarResult);
+            SystemProperties.set("persist.fullscreen.enable", "false");
         }
 
         ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
