@@ -327,4 +327,7 @@
 
     <!-- should show the screenshot button default -->
     <integer name="def_screenshot_button_show">0</integer>
+
+    <!-- should show the volume button default -->
+    <integer name="def_volume_button_show">0</integer>
 </resources>

@@ -240,6 +240,7 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
     // @Rockchip add screenshot
     private ContentObserver mScreenshotShowObserver;
     // @end
+    private ContentObserver mVolumeShowObserver;
     private boolean mLongPressHomeEnabled;
 
     private int mDisabledFlags1;
@@ -733,6 +734,20 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
                 mScreenshotShowObserver, UserHandle.USER_ALL);
         // @end
 
+        mVolumeShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.VOLUME_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher volumeAddButton = mView.getVolumeAddButton();
+                ButtonDispatcher volumeSubButton = mView.getVolumeSubButton();
+                volumeAddButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+                volumeSubButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.VOLUME_BUTTON_SHOW), true,
+                mVolumeShowObserver, UserHandle.USER_ALL);
+
         mHomeButtonLongPressDurationMs = Optional.of(mDeviceConfigProxy.getLong(
                 DeviceConfig.NAMESPACE_SYSTEMUI,
                 HOME_BUTTON_LONG_PRESS_DURATION_MS,
@@ -771,6 +786,10 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
             mContentResolver.unregisterContentObserver(mScreenshotShowObserver);
         }
         // @end
+
+        if (null != mVolumeShowObserver) {
+            mContentResolver.unregisterContentObserver(mVolumeShowObserver);
+        }
 
         mNavBarHelper.removeNavTaskStateUpdater(mNavbarTaskbarStateUpdater);
         mNotificationShadeDepthController.removeListener(mDepthListener);
@@ -1353,7 +1372,8 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
         ButtonDispatcher volumeAddButton=mView.getVolumeAddButton();
         ButtonDispatcher volumeSubButton=mView.getVolumeSubButton();
         //boolean isShowVolumeButton = "true".equals(SystemProperties.get("ro.rk.systembar.voiceicon","true"));
-        boolean isShowVolumeButton = true;
+        //boolean isShowVolumeButton = true;
+        boolean isShowVolumeButton = Settings.System.getInt(mContext.getContentResolver(), Settings.System.VOLUME_BUTTON_SHOW, 1) == 1;
         if(isShowVolumeButton){
             volumeAddButton.setVisibility(View.VISIBLE);
             volumeSubButton.setVisibility(View.VISIBLE);

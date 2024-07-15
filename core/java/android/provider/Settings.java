@@ -5374,6 +5374,13 @@ public final class Settings {
         public static final String SCREENSHOT_BUTTON_SHOW = "screenshot_button_show";
 
         /**
+         * volume button show.
+         *
+         * @hide
+         */
+        public static final String VOLUME_BUTTON_SHOW = "volume_button_show";
+
+        /**
          * Whether the phone vibrates when it is ringing due to an incoming call. This will
          * be used by Phone and Setting apps; it shouldn't affect other apps.
          * The value is boolean (1 or 0).
