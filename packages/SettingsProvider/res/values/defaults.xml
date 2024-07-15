@@ -339,4 +339,7 @@
 
     <!-- should show the recents button default -->
     <integer name="def_recents_button_show">1</integer>
+
+    <!-- should lock the status bar default -->
+    <integer name="def_lock_status_bar">0</integer>
 </resources>

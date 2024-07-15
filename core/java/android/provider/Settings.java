@@ -5402,6 +5402,13 @@ public final class Settings {
         public static final String RECENTS_BUTTON_SHOW = "recents_button_show";
 
         /**
+         * lock status bar.
+         *
+         * @hide
+         */
+        public static final String LOCK_STATUS_BAR = "lock_status_bar";
+
+        /**
          * Whether the phone vibrates when it is ringing due to an incoming call. This will
          * be used by Phone and Setting apps; it shouldn't affect other apps.
          * The value is boolean (1 or 0).

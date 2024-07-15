@@ -50,6 +50,7 @@ import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Pair;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -194,6 +195,7 @@ public class CommandQueue extends IStatusBar.Stub implements
     private final DisplayTracker mDisplayTracker;
     private final @Nullable CommandRegistry mRegistry;
     private final @Nullable DumpHandler mDumpHandler;
+    private final Context mContext;
 
     /**
      * These methods are called back on the main thread.
@@ -527,6 +529,7 @@ public class CommandQueue extends IStatusBar.Stub implements
         mDisplayTracker = displayTracker;
         mRegistry = registry;
         mDumpHandler = dumpHandler;
+        mContext = context;
         mDisplayTracker.addDisplayChangeCallback(new DisplayTracker.Callback() {
             @Override
             public void onDisplayRemoved(int displayId) {
@@ -548,6 +551,11 @@ public class CommandQueue extends IStatusBar.Stub implements
     public boolean panelsEnabled() {
         final int disabled1 = getDisabled1(mDisplayTracker.getDefaultDisplayId());
         final int disabled2 = getDisabled2(mDisplayTracker.getDefaultDisplayId());
+
+        boolean isLockStatusBar = Settings.System.getInt(mContext.getContentResolver(), Settings.System.LOCK_STATUS_BAR, 1) == 1;
+        if (isLockStatusBar)
+            return false;
+
         return (disabled1 & StatusBarManager.DISABLE_EXPAND) == 0
                 && (disabled2 & StatusBarManager.DISABLE2_NOTIFICATION_SHADE) == 0;
     }
