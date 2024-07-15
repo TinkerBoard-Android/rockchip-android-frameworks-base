@@ -8683,6 +8683,11 @@ public class ActivityManagerService extends IActivityManager.Stub
             mAtmInternal.showSystemReadyErrorDialogsIfNeeded();
             t.traceEnd();
 
+            if (Settings.System.getInt(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_ENABLE, 0) == 1) {
+                String autostartApp = Settings.System.getString(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_NAME);
+                if (!"".equals(autostartApp))
+                    startAppOrService(mContext, autostartApp);
+            }
 
             if (isBootingSystemUser) {
                 // Need to send the broadcasts for the system user here because
@@ -8757,6 +8762,23 @@ public class ActivityManagerService extends IActivityManager.Stub
             t.traceEnd(); // componentAlias
 
             t.traceEnd(); // PhaseActivityManagerReady
+        }
+    }
+
+    private void startAppOrService(Context context,String appPackage) {
+        PackageManager doupackageManager = context.getPackageManager();
+        try {
+            new Handler().postDelayed(new Runnable() {
+                public void run() {
+                    Intent intent = new Intent();
+                    intent = doupackageManager.getLaunchIntentForPackage(appPackage);
+                    if (intent != null) {
+                        context.startActivity(intent);
+                    }
+                }
+            }, 8000);
+        } catch (Exception e) {
+            Log.i(TAG, "startApp_exception: " + e);
         }
     }
 
