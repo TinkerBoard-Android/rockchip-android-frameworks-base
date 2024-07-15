@@ -241,6 +241,9 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
     private ContentObserver mScreenshotShowObserver;
     // @end
     private ContentObserver mVolumeShowObserver;
+    private ContentObserver mBackShowObserver;
+    private ContentObserver mHomeShowObserver;
+    private ContentObserver mRecentsShowObserver;
     private boolean mLongPressHomeEnabled;
 
     private int mDisabledFlags1;
@@ -748,6 +751,42 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
                 Settings.System.getUriFor(Settings.System.VOLUME_BUTTON_SHOW), true,
                 mVolumeShowObserver, UserHandle.USER_ALL);
 
+        mBackShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.BACK_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher backButton = mView.getBackButton();
+                backButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.BACK_BUTTON_SHOW), true,
+                mBackShowObserver, UserHandle.USER_ALL);
+
+        mHomeShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.HOME_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher homeButton = mView.getHomeButton();
+                homeButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.HOME_BUTTON_SHOW), true,
+                mHomeShowObserver, UserHandle.USER_ALL);
+
+        mRecentsShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.RECENTS_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher recentsButton = mView.getRecentsButton();
+                recentsButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.RECENTS_BUTTON_SHOW), true,
+                mRecentsShowObserver, UserHandle.USER_ALL);
+
         mHomeButtonLongPressDurationMs = Optional.of(mDeviceConfigProxy.getLong(
                 DeviceConfig.NAMESPACE_SYSTEMUI,
                 HOME_BUTTON_LONG_PRESS_DURATION_MS,
@@ -789,6 +828,17 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
 
         if (null != mVolumeShowObserver) {
             mContentResolver.unregisterContentObserver(mVolumeShowObserver);
+        }
+
+        if (null != mBackShowObserver) {
+            mContentResolver.unregisterContentObserver(mBackShowObserver);
+        }
+        if (null != mHomeShowObserver) {
+            mContentResolver.unregisterContentObserver(mHomeShowObserver);
+        }
+
+        if (null != mRecentsShowObserver) {
+            mContentResolver.unregisterContentObserver(mRecentsShowObserver);
         }
 
         mNavBarHelper.removeNavTaskStateUpdater(mNavbarTaskbarStateUpdater);
@@ -1384,6 +1434,28 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
         if (mContext.getResources().getConfiguration().smallestScreenWidthDp < 400) {
             volumeAddButton.setVisibility(View.GONE);
             volumeSubButton.setVisibility(View.GONE);
+        }
+
+        ButtonDispatcher backButton = mView.getBackButton();
+        boolean isBackShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.BACK_BUTTON_SHOW, 1) == 1;
+        if (isBackShow) {
+            backButton.setVisibility(View.VISIBLE);
+        } else {
+            backButton.setVisibility(View.GONE);
+        }
+
+        boolean isHomeShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.HOME_BUTTON_SHOW, 1) == 1;
+        if (isHomeShow) {
+            homeButton.setVisibility(View.VISIBLE);
+        } else {
+            homeButton.setVisibility(View.GONE);
+        }
+
+        boolean isRecentShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.RECENTS_BUTTON_SHOW, 1) == 1;
+        if (isRecentShow) {
+            recentsButton.setVisibility(View.VISIBLE);
+        } else {
+            recentsButton.setVisibility(View.GONE);
         }
 
         ButtonDispatcher imeSwitcherButton = mView.getImeSwitchButton();

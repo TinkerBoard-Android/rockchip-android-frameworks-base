@@ -330,4 +330,13 @@
 
     <!-- should show the volume button default -->
     <integer name="def_volume_button_show">0</integer>
+
+    <!-- should show the back button default -->
+    <integer name="def_back_button_show">1</integer>
+
+    <!-- should show the home button default -->
+    <integer name="def_home_button_show">1</integer>
+
+    <!-- should show the recents button default -->
+    <integer name="def_recents_button_show">1</integer>
 </resources>

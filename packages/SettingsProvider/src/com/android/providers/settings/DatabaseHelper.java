@@ -2266,6 +2266,15 @@ class DatabaseHelper extends SQLiteOpenHelper {
             loadIntegerSetting(stmt, Settings.System.VOLUME_BUTTON_SHOW,
                     R.integer.def_volume_button_show);
 
+            loadIntegerSetting(stmt, Settings.System.BACK_BUTTON_SHOW,
+                    R.integer.def_back_button_show);
+
+            loadIntegerSetting(stmt, Settings.System.HOME_BUTTON_SHOW,
+                    R.integer.def_home_button_show);
+
+            loadIntegerSetting(stmt, Settings.System.RECENTS_BUTTON_SHOW,
+                    R.integer.def_recents_button_show);
+
             /*
              * IMPORTANT: Do not add any more upgrade steps here as the global,
              * secure, and system settings are no longer stored in a database
