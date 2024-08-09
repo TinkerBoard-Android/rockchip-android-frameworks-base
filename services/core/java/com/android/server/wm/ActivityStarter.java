@@ -106,6 +106,7 @@ import android.app.WindowConfiguration;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.Disabled;
 import android.compat.annotation.EnabledSince;
+import android.content.ComponentName;
 import android.content.IIntentSender;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -122,6 +123,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -948,6 +950,20 @@ class ActivityStarter {
                 ? UserHandle.getUserId(aInfo.applicationInfo.uid) : 0;
         final int launchMode = aInfo != null ? aInfo.launchMode : 0;
         if (err == ActivityManager.START_SUCCESS) {
+            ComponentName component = intent.getComponent();
+            if (null != component) {
+                String packageName;
+                packageName = component.getPackageName();
+                if (null != packageName) {
+                    SystemProperties.set("sys.camera.callprocess", packageName);
+                    Slog.i("Camera", "callprocess:" + packageName);
+                } else {
+                    Slog.e("Camera", "getPackageName failed.");
+                }
+            } else {
+                Slog.e("Camera", "getComponent failed.");
+            }
+
             request.logMessage.append("START u").append(userId).append(" {")
                     .append(intent.toShortString(true, true, true, false))
                     .append("} with ").append(launchModeToString(launchMode))

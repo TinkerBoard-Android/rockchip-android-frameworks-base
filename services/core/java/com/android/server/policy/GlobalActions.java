@@ -17,6 +17,7 @@ package com.android.server.policy;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Slog;
+import android.os.SystemProperties;
 
 import com.android.server.LocalServices;
 import com.android.server.policy.WindowManagerPolicy.WindowManagerFuncs;
@@ -91,6 +92,7 @@ class GlobalActions implements GlobalActionsProvider.GlobalActionsListener {
     public void onGlobalActionsAvailableChanged(boolean available) {
         if (DEBUG) Slog.d(TAG, "onGlobalActionsAvailableChanged " + available);
         mGlobalActionsAvailable = available;
+        if ("box".equals(SystemProperties.get("ro.target.product"))) mGlobalActionsAvailable = false;
         if (mShowing && !mGlobalActionsAvailable) {
             // Global actions provider died but we need to be showing global actions still, show the
             // legacy global actions provider and remove timeout callbacks to avoid legacy re-show.

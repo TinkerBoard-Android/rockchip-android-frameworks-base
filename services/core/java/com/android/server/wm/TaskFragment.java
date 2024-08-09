@@ -80,6 +80,7 @@ import android.app.servertransaction.ClientTransaction;
 import android.app.servertransaction.NewIntentItem;
 import android.app.servertransaction.PauseActivityItem;
 import android.app.servertransaction.ResumeActivityItem;
+import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -87,6 +88,7 @@ import android.graphics.Rect;
 import android.hardware.HardwareBuffer;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.util.DisplayMetrics;
 import android.util.Slog;
@@ -1188,6 +1190,20 @@ class TaskFragment extends WindowContainer<WindowContainer> {
         ActivityRecord next = topRunningActivity(true /* focusableOnly */);
         if (next == null || !next.canResumeByCompat()) {
             return false;
+        }
+
+        ComponentName component = next.intent.getComponent();
+        if (null != component) {
+            String packageName;
+            packageName = component.getPackageName();
+            if (null != packageName) {
+                SystemProperties.set("sys.camera.callprocess", packageName);
+                Slog.i("Camera", "callprocess:" + packageName);
+            } else {
+                Slog.e("Camera", "getPackageName failed.");
+            }
+        } else {
+            Slog.e("Camera", "getComponent failed.");
         }
 
         next.delayedResume = false;

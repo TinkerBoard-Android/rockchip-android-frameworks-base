@@ -697,8 +697,53 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private static final int MSG_LOG_KEYBOARD_SYSTEM_EVENT = 26;
     //----rk-code----
     private static final int MSG_SLEEP_SHOW_DREAM = 27;
-    //---------------
 
+    private int screenWidth;
+    private int screenHeight;
+    private String mstate = null;
+    private float mdeltax, mdeltay;
+    boolean keydown;
+
+    public Handler mKeyMouseHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch(msg.what){
+            case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT:
+                mdeltax = -1.0f;
+                mdeltay = 0;
+                break;
+            case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT:
+                mdeltax = 1.0f;
+                mdeltay = 0;
+                break;
+            case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP:
+                mdeltax = 0;
+                mdeltay = -1.0f;
+                break;
+            case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_DOWN:
+                mdeltax = 0;
+                mdeltay = 1.0f;
+                break;
+            case KeyEvent.KEYCODE_PROFILE_SWITCH:
+                mdeltax = 0;
+                mdeltay = 0;
+                break;
+            default:
+                break;
+            }
+
+            try {
+                mWindowManagerFuncs.dispatchMouse(mdeltax,mdeltay,screenWidth,screenHeight);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+
+            if (keydown) {
+                mKeyMouseHandler.sendEmptyMessageDelayed(msg.what,30);
+            }
+        }
+    };
+
+    //---------------
     private class PolicyHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -2268,6 +2313,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Controls rotation and the like.
         initializeHdmiState();
+        //------rk-code---------
+        initializeDpState();
+        //----------------------
 
         // Match current screen state.
         if (!mPowerManager.isInteractive()) {
@@ -3014,6 +3062,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         final long keyConsumed = -1;
         final long keyNotConsumed = 0;
         final int deviceId = event.getDeviceId();
+        final boolean down = event.getAction() == KeyEvent.ACTION_DOWN;
 
         if (DEBUG_INPUT) {
             Log.d(TAG,
@@ -3021,6 +3070,28 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             + " repeatCount=" + event.getRepeatCount() + " keyguardOn="
                             + keyguardOn() + " canceled=" + event.isCanceled());
         }
+
+	//-----------------------rk code----------
+        //infrare simulate mouse
+        boolean isBox = "box".equals(SystemProperties.get("ro.target.product"));
+        if (isBox) {
+            mstate = SystemProperties.get("sys.KeyMouse.mKeyMouseState");
+            if (mstate.equals("on") && ((keyCode == KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT)
+                || (keyCode == KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT)
+                || (keyCode == KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP)
+                || (keyCode == KeyEvent.KEYCODE_SYSTEM_NAVIGATION_DOWN)
+                || (keyCode == KeyEvent.KEYCODE_PROFILE_SWITCH))) {
+            keydown = down;
+            mKeyMouseHandler.sendEmptyMessage(keyCode);
+            //return -1;
+            }
+
+            if (mstate.equals("on") && ((keyCode == KeyEvent.KEYCODE_ENTER)
+                ||(keyCode == KeyEvent.KEYCODE_DPAD_CENTER))) {
+            return -1;
+            }
+        }
+	//----------------------------------------
 
         if (mKeyCombinationManager.isKeyConsumed(event)) {
             return keyConsumed;
@@ -4093,6 +4164,35 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mCameraLensCoverState = lensCoverState;
     }
 
+    //------rk-code---------
+    void initializeDpState() {
+        final int oldMask = StrictMode.allowThreadDiskReadsMask();
+        try {
+            initializeDpStateInternal();
+        } finally {
+            StrictMode.setThreadPolicyMask(oldMask);
+        }
+    }
+
+    void initializeDpStateInternal(){
+        boolean plugged = false;
+        final List<ExtconUEventObserver.ExtconInfo> extcons =
+                    ExtconUEventObserver.ExtconInfo.getExtconInfoForTypes(
+                            new String[] {ExtconUEventObserver.ExtconInfo.EXTCON_DP});
+        if (extcons.isEmpty()) {
+            Slog.i(TAG, "Not observing DP plug state because DP was not found.");
+        } else {
+            for(int i=0; i<extcons.size(); i++){
+                MultiDpVideoExtconUEventObserver observer=new MultiDpVideoExtconUEventObserver();
+                ExtconUEventObserver.ExtconInfo info=(ExtconUEventObserver.ExtconInfo) extcons.get(i);
+                plugged = observer.init(info);
+                mDefaultDisplayPolicy.addDpPluggedState(info.getName(),plugged);
+                mDefaultDisplayPolicy.setMultiDpPlugged(plugged,info);
+            }
+        }
+    }
+    //----------------------
+
     void initializeHdmiState() {
         final int oldMask = StrictMode.allowThreadDiskReadsMask();
         try {
@@ -4134,10 +4234,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     ExtconUEventObserver.ExtconInfo.getExtconInfoForTypes(
                             new String[] {ExtconUEventObserver.ExtconInfo.EXTCON_HDMI});
             if (!extcons.isEmpty()) {
-                // TODO: handle more than one HDMI
-                HdmiVideoExtconUEventObserver observer = new HdmiVideoExtconUEventObserver();
-                plugged = observer.init(extcons.get(0));
-                mHDMIObserver = observer;
+                //------rk-code---------
+                for (int i = 0; i < extcons.size(); i++) {
+                    MultiHdmiVideoExtconUEventObserver observer = new MultiHdmiVideoExtconUEventObserver();
+                    ExtconUEventObserver.ExtconInfo info = (ExtconUEventObserver.ExtconInfo) extcons.get(i);
+                    plugged = observer.init(info);
+                    mDefaultDisplayPolicy.addHdmiPluggedState(info.getName(), plugged);
+                    mDefaultDisplayPolicy.setMultiHdmiPlugged(plugged, true, info);
+                }
+                //----------------------
             } else if (localLOGV) {
                 Slog.v(TAG, "Not observing HDMI plug state because HDMI was not found.");
             }
@@ -4201,6 +4306,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Basic policy based on interactive state.
         int result;
+	//-----------------------rk code----------
+	boolean isBox = "box".equals(SystemProperties.get("ro.target.product"));
+	//----------------------------------------
         if (interactive || (isInjected && !isWakeKey)) {
             // When the device is interactive or the key is injected pass the
             // key to the application.
@@ -4441,9 +4549,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT:
                 // fall through
             case KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT: {
-                logKeyboardSystemsEventOnActionUp(event, KeyboardLogEvent.SYSTEM_NAVIGATION);
-                result &= ~ACTION_PASS_TO_USER;
-                interceptSystemNavigationKey(event);
+                //-----------------------rk code----------
+                if(!isBox){
+                   logKeyboardSystemsEventOnActionUp(event, KeyboardLogEvent.SYSTEM_NAVIGATION);
+                   result &= ~ACTION_PASS_TO_USER;
+                   interceptSystemNavigationKey(event);
+                }
+                //----------------------------------------
                 break;
             }
 
@@ -5029,6 +5141,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     public void showSleepDream() {
         mDefaultDisplayPolicy.showScreenDream();
     }
+
+    public boolean hasScreenDream(){
+        return mDefaultDisplayPolicy.hasScreenDream();
+    }
+
     //---------------
     @Override
     public void startedGoingToSleepGlobal(@PowerManager.GoToSleepReason int reason) {
@@ -6638,6 +6755,68 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return state.contains(HDMI_EXIST);
         }
     }
+
+    //------rk-code---------
+    private class MultiHdmiVideoExtconUEventObserver extends ExtconStateObserver<Boolean> {
+        private static final String HDMI_EXIST = "HDMI=1";
+        private static final String NAME = "hdmi";
+        private static final String EXIST = "=1";
+
+        private boolean init(ExtconInfo info) {
+            boolean plugged = false;
+            try {
+                plugged = parseStateFromFile(info);
+            } catch (Exception e) {
+                Slog.e(TAG, "Error reading " + info.getStatePath(), e);
+            }
+            Slog.i(TAG, "start observing HDMI "+info.getName());
+            startObserving(info);
+            return plugged;
+        }
+
+        @Override
+        public void updateState(ExtconInfo extconInfo, String eventName, Boolean state) {
+            mDefaultDisplayPolicy.setMultiHdmiPlugged(state,extconInfo);
+        }
+
+        @Override
+        public Boolean parseState(ExtconInfo extconIfno, String state) {
+            // state: HDMI=1 or state: hdmi*=1
+            return (state.contains(NAME) && state.contains(EXIST))
+                || state.contains(HDMI_EXIST);
+        }
+    }
+
+    private class MultiDpVideoExtconUEventObserver extends ExtconStateObserver<Boolean> {
+        private static final String DP_EXIST = "DP=1";
+        private static final String NAME = "dp";
+        private static final String EXIST = "=1";
+
+        private boolean init(ExtconInfo info) {
+            boolean plugged = false;
+            try {
+                plugged = parseStateFromFile(info);
+            } catch (Exception e) {
+                Slog.e(TAG, "Error reading " + info.getStatePath(), e);
+            }
+            Slog.i(TAG, "start observing DP "+info.getName());
+            startObserving(info);
+            return plugged;
+        }
+
+        @Override
+        public void updateState(ExtconInfo extconInfo, String eventName, Boolean state) {
+            mDefaultDisplayPolicy.setMultiDpPlugged(state,extconInfo);
+        }
+
+        @Override
+        public Boolean parseState(ExtconInfo extconIfno, String state) {
+            // state: DP=1 or state: dp*=1
+            return (state.contains(NAME) && state.contains(EXIST))
+                || state.contains(DP_EXIST);
+        }
+    }
+    //----------------------
 
     private void launchTargetSearchActivity() {
         Intent intent;

@@ -82,6 +82,14 @@ public interface WindowManagerPolicyConstants {
      */
     String EXTRA_HDMI_PLUGGED_STATE = "state";
 
+    //------rk-code---------
+    String EXTRA_MULTI_HDMI_PLUGGED_NAME = "extcon_name";
+
+    String ACTION_DP_PLUGGED = "android.intent.action.DP_PLUGGED";
+    String EXTRA_DP_PLUGGED_STATE = "state";
+    String EXTRA_MULTI_DP_PLUGGED_NAME = "extcon_name";
+    //----------------------
+
     /**
      * Set to {@code true} when intent was invoked from pressing the home key.
      * @hide

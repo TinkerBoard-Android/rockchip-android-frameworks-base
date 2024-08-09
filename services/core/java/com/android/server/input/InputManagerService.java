@@ -602,6 +602,16 @@ public class InputManagerService extends IInputManager.Stub
         }
     }
 
+    //-----------------------rk code----------
+    public void dispatchMouse(float x, float y, int w, int h) {
+        mNative.dispatchMouse(x, y, w, h);
+    }
+
+    public void dispatchMousebyCd(float x, float y) {
+        mNative.dispatchMouseByCd(x, y);
+    }
+    //----------------------------------------
+
     /**
      * Gets the current state of a key or button by key code.
      * @param deviceId The input device id, or -1 to consult all devices.

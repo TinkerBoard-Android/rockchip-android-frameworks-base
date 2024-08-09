@@ -433,7 +433,6 @@ public class AudioService extends IAudioService.Stub
     //-----rk-code-----//
     private HashMap<Integer, VolumeStreamState[]> mUserIdStreamStatesMap;
     private int mCurrentUserId;
-    private final Object mCreateStreamLock = new Object();
     //-----------------//
 
     /*package*/ int getVssVolumeForDevice(int stream, int device) {
@@ -2197,20 +2196,27 @@ public class AudioService extends IAudioService.Stub
     //-----rk-code-----//
     private void getCurrentUserStreamSates(int uid) {
         if (isPlatformAutomotive()) {
-            synchronized (mCreateStreamLock) {
-                int userID = UserHandle.getUserId(uid);
-                if (userID != UserHandle.USER_SYSTEM) {
-                    mCurrentUserId = userID;
-                }
-                if (DEBUG_VOL) {
-                    Log.d(TAG, "get uid:" + uid + " userID:" + userID + " currentUserId: " + mCurrentUserId);
-                }
-                VolumeStreamState[] streamStates = mUserIdStreamStatesMap.get(mCurrentUserId);
-                if (streamStates == null && mCurrentUserId != UserHandle.USER_SYSTEM) {
-                    createStreamStates();
-                    mUserIdStreamStatesMap.put(mCurrentUserId, mStreamStates);
-                } else {
-                    mStreamStates = streamStates;
+            synchronized (mSettingsLock) {
+                synchronized (VolumeStreamState.class) {
+                    int userID = UserHandle.getUserId(uid);
+                    if (userID != UserHandle.USER_SYSTEM) {
+                        mCurrentUserId = userID;
+                    }else {
+                        mCurrentUserId = UserHandle.MIN_SECONDARY_USER_ID;
+                        if (DEBUG_VOL) {
+                                Log.d(TAG, "--getCurrentUserStreamSates called from U0,force mCurrentUserId to Driver--");
+                        }
+                    }
+                    if (DEBUG_VOL) {
+                        Log.d(TAG, "get uid:" + uid + " userID:" + userID + " currentUserId: " + mCurrentUserId);
+                    }
+                    VolumeStreamState[] streamStates = mUserIdStreamStatesMap.get(mCurrentUserId);
+                    if (streamStates == null && mCurrentUserId != UserHandle.USER_SYSTEM) {
+                        createStreamStates();
+                        mUserIdStreamStatesMap.put(mCurrentUserId, mStreamStates);
+                    } else {
+                        mStreamStates = streamStates;
+                    }
                 }
             }
         }

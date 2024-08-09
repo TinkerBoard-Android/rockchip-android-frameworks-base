@@ -52,7 +52,7 @@ import javax.inject.Provider;
 import rockchip.hardware.hdmi.V1_0.IHdmi;
 import rockchip.hardware.hdmi.V1_0.IHdmiAudioCallback;
 import android.os.RemoteException;
-import android.media.AudioStream;
+import android.media.AudioPreviewThread;
 
 /**
  * Application class for SystemUI.
@@ -75,19 +75,19 @@ public class SystemUIApplication extends Application implements
 
     class HdmiAudioCallback extends IHdmiAudioCallback.Stub{
         Context mContext;
-        AudioStream mAudioStream;
+        AudioPreviewThread mAudioPreviewThread;
         private void startHdmiAudioService(String cameraId) {
             Log.d(TAG, "startHdmiAudioService cameraId:"+cameraId);
-            mAudioStream.start();
+            mAudioPreviewThread.startAudioPreview();
         }
 
         private void stopHdmiAudioService(String cameraId) {
             Log.d(TAG, "stopHdmiAudioService cameraId:"+cameraId);
-            mAudioStream.stop();
+            mAudioPreviewThread.stopAudioPreview();
         }
         public  HdmiAudioCallback(Context context){
             mContext = context;
-            mAudioStream = new AudioStream(getApplicationContext());
+            mAudioPreviewThread = new AudioPreviewThread(getApplicationContext());
         }
 
         public void onConnect(String cameraId) throws RemoteException {

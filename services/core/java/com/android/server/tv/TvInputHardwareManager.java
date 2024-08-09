@@ -43,7 +43,7 @@ import android.media.AudioPatch;
 import android.media.AudioPort;
 import android.media.AudioPortConfig;
 import android.media.AudioSystem;
-import android.media.AudioStream;
+import android.media.AudioPreviewThread;
 import android.media.tv.ITvInputHardware;
 import android.media.tv.ITvInputHardwareCallback;
 import android.media.tv.TvInputHardwareInfo;
@@ -102,7 +102,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
     private final Map<String, TvInputInfo> mInputMap = new ArrayMap<>();
 
     private final AudioManager mAudioManager;
-    private final AudioStream mAudioStream;
+    private final AudioPreviewThread mAudioPreviewThread;
     private final IHdmiHotplugEventListener mHdmiHotplugEventListener =
             new HdmiHotplugEventListener();
     private final IHdmiDeviceEventListener mHdmiDeviceEventListener = new HdmiDeviceEventListener();
@@ -131,7 +131,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
         mContext = context;
         mListener = listener;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mAudioStream = new AudioStream(context);
+        mAudioPreviewThread = new AudioPreviewThread(context);
         mHal.init();
     }
 
@@ -281,9 +281,12 @@ class TvInputHardwareManager implements TvInputHal.Callback {
             //-----------------------rk code----------
             if (null != data) {
                 String subType = data.getString(TV_MESSAGE_KEY_SUBTYPE);
-                if ("hdmiinout".equals(subType)) {
-                    if (null != mAudioStream)
-                        mAudioStream.stop();
+                if ("audio_present=1".equals(subType)) {
+                    if (null != mAudioPreviewThread)
+                        mAudioPreviewThread.startAudioPreview();
+                } else if ("audio_present=0".equals(subType)) {
+                    if (null != mAudioPreviewThread)
+                        mAudioPreviewThread.stopAudioPreview();
                 }
             }
             //----------------------------------------
@@ -886,7 +889,8 @@ class TvInputHardwareManager implements TvInputHal.Callback {
             @Override
             public void onServiceDied() {
                 synchronized (mImplLock) {
-                    mAudioStream.stop();
+                    if (null != mAudioPreviewThread)
+                        mAudioPreviewThread.stopAudioPreview();
                     mAudioSource = null;
                     mAudioSink.clear();
                     if (mAudioPatch != null) {
@@ -993,8 +997,8 @@ class TvInputHardwareManager implements TvInputHal.Callback {
                         result = mHal.removeStream(mInfo.getDeviceId(), mActiveConfig);
                         //-----------------------rk code----------
                         Slog.w(TAG, "setSurface null and end removestream " + mActiveConfig);
-                        mAudioStream.stop();
-                        Slog.w(TAG, "setSurface null and end mAudioStream.stop");
+                        if (null != mAudioPreviewThread)
+                            mAudioPreviewThread.stopAudioPreview();
                         //----------------------------------------
                         mActiveConfig = null;
                     } else {
@@ -1031,7 +1035,6 @@ class TvInputHardwareManager implements TvInputHal.Callback {
                         result = mHal.addOrUpdateStream(mInfo.getDeviceId(), surface, config);
                         Slog.w(TAG, "setSurface and end addOrUpdateStream result: " + result);
                         if (result == TvInputHal.SUCCESS) {
-                            mAudioStream.start();
                             mActiveConfig = config;
                         }
                     }

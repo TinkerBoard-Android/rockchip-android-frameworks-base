@@ -360,7 +360,13 @@ final class WifiDisplayController implements DumpUtils.Dump {
 
     private int computeFeatureState() {
         if (!mWifiP2pEnabled) {
-            return WifiDisplayStatus.FEATURE_STATE_DISABLED;
+            if (mWifiDisplayOnSetting) {
+                    Slog.d(TAG, "Wifi p2p is disabled, update WIFI_DISPLAY_ON as false.");
+
+                    Settings.Global.putInt(
+                        mContext.getContentResolver(), Settings.Global.WIFI_DISPLAY_ON, 0);
+                    mWifiDisplayOnSetting = false;
+            }
         }
         return mWifiDisplayOnSetting ? WifiDisplayStatus.FEATURE_STATE_ON :
                 WifiDisplayStatus.FEATURE_STATE_OFF;

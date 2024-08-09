@@ -87,6 +87,9 @@ public abstract class TvInputService extends Service {
     private static final String TAG = "TvInputService";
 
     private static final int DETACH_OVERLAY_VIEW_TIMEOUT_MS = 5000;
+    //------rk-code---------
+    private static final long NOTIFY_SESSION_CREATE_INTERVAL_MS = 100;
+    //----------------------
 
     /**
      * This is the interface name that a service implementing a TV input should say that it support
@@ -155,6 +158,9 @@ public abstract class TvInputService extends Service {
             new RemoteCallbackList<>();
 
     private TvInputManager mTvInputManager;
+    //------rk-code---------
+    private long mLastNotifySessionCreateTime = 0;
+    //----------------------
 
     @Override
     public final IBinder onBind(Intent intent) {
@@ -2827,6 +2833,24 @@ public abstract class TvInputService extends Service {
                     return;
                 }
                 case DO_NOTIFY_SESSION_CREATED: {
+                    //------rk-code---------
+                    long currentTime = System.currentTimeMillis();
+                    long intervalTime = currentTime - mLastNotifySessionCreateTime;
+                    if (intervalTime < NOTIFY_SESSION_CREATE_INTERVAL_MS) {
+                        try {
+                            long sleepTime = NOTIFY_SESSION_CREATE_INTERVAL_MS - intervalTime;
+                            if (sleepTime > NOTIFY_SESSION_CREATE_INTERVAL_MS) {
+                                Log.e(TAG, "force sleep err " + sleepTime + ", current=" + currentTime
+                                    + ", last=" + mLastNotifySessionCreateTime);
+                                sleepTime = NOTIFY_SESSION_CREATE_INTERVAL_MS;
+                            }
+                            Log.w(TAG, "force sleep " + sleepTime + "ms for DO_NOTIFY_SESSION_CREATED");
+                            Thread.sleep(sleepTime);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    //----------------------
                     SomeArgs args = (SomeArgs) msg.obj;
                     Session sessionImpl = (Session) args.arg1;
                     ITvInputSession stub = (ITvInputSession) args.arg2;
@@ -2841,6 +2865,9 @@ public abstract class TvInputService extends Service {
                         sessionImpl.initialize(cb);
                     }
                     args.recycle();
+                    //------rk-code---------
+                    mLastNotifySessionCreateTime = System.currentTimeMillis();
+                    //----------------------
                     return;
                 }
                 case DO_CREATE_RECORDING_SESSION: {

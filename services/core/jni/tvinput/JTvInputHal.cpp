@@ -160,6 +160,7 @@ int JTvInputHal::addOrUpdateStream(int deviceId, int streamId, const sp<Surface>
             ALOGW("stream config info: width=%d, height=%d, format=%d, usage=%ld, buffCount=%d",
                 width, height, format, usage, buffCount);
             if (connection.mThread == NULL) {
+                ALOGW("new BufferProducerThread deviceId=%d", deviceId);
                 connection.mThread = new BufferProducerThread(this, deviceId);
             }
             int buffSize = connection.mThread->initPreviewBuffPoll(surface, &list[configIndex]);
@@ -236,9 +237,12 @@ int JTvInputHal::removeStream(int deviceId, int streamId) {
     if (connection.mThread != NULL) {
         ALOGW("%s exit connection.mThread", __FUNCTION__);
         connection.mThread->shutdown();
-        connection.mThread->requestExit();
+        ALOGW("%s shutdown end", __FUNCTION__);
+        //connection.mThread->requestExit();
         connection.mThread->requestExitAndWait();
+        ALOGW("%s requestExitAndWait end", __FUNCTION__);
         connection.mThread = NULL;
+        ALOGW("%s connection.mThread = NULL", __FUNCTION__);
     }
     connection.mSurface.clear();
     connection.mSurface = NULL;
@@ -696,7 +700,7 @@ JTvInputHal::ITvInputWrapper::ITvInputWrapper(std::shared_ptr<AidlITvInput>& aid
         ALOGE("%s err status mIsHidl=%d or mAidlRkTvInput is null", __FUNCTION__, mIsHidl);
         return ::ndk::ScopedAStatus::fromExceptionCode(EX_UNSUPPORTED_OPERATION);
     } else {
-        return mAidlRkTvInput->setSinglePreviewBuffer(bufId, makeToAidl(bufHandle));
+        return mAidlRkTvInput->setSinglePreviewBuffer(bufId, dupToAidl(bufHandle));
     }
 }
 
@@ -901,6 +905,10 @@ void JTvInputHal::BufferProducerThread::onCaptured(uint64_t buffId, uint32_t buf
             mAlreadyShowSignal = true;
             ALOGW("%s show signal", __FUNCTION__);
             err = anw->queueBuffer(anw.get(), mTvHalPreviewBuff[mTvHalPreviewBuff.size()-1].mGraphicBuffer.get(), -1);
+            ALOGW("%s show signal err=%d", __FUNCTION__, err);
+            if (err == NO_ERROR) {
+                mTvHalPreviewBuff[mTvHalPreviewBuff.size()-1].buffStatus = BUFF_STATUS_QUEUED;
+            }
             return;
         }
         if (mAlreadyShowSignal) {

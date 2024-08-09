@@ -21689,6 +21689,14 @@ package android.media {
     method @NonNull public android.media.AudioPresentation.Builder setProgramId(int);
   }
 
+  public class AudioPreviewThread implements java.lang.Runnable {
+    ctor public AudioPreviewThread(@NonNull android.content.Context);
+    method public void run();
+    method public void setVolume(float);
+    method public void startAudioPreview();
+    method public void stopAudioPreview();
+  }
+
   public class AudioProfile implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public int[] getChannelIndexMasks();
@@ -21825,13 +21833,6 @@ package android.media {
 
   public static interface AudioRouting.OnRoutingChangedListener {
     method public void onRoutingChanged(android.media.AudioRouting);
-  }
-
-  public class AudioStream implements java.io.Closeable {
-    ctor public AudioStream(@NonNull android.content.Context);
-    method public void close();
-    method public boolean start();
-    method public void stop();
   }
 
   public final class AudioTimestamp implements android.os.Parcelable {
