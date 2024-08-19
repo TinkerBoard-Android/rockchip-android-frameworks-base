@@ -101,6 +101,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.graphics.Rect;
@@ -126,6 +127,7 @@ import android.os.UserHandle;
 import android.os.storage.StorageManager;
 import android.provider.Settings;
 import android.service.voice.IVoiceInteractionSession;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.IntArray;
@@ -1501,28 +1503,47 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     @VisibleForTesting
     ActivityInfo resolveHomeActivity(int userId, Intent homeIntent) {
         final int flags = ActivityManagerService.STOCK_PM_FLAGS;
-        final ComponentName comp = homeIntent.getComponent();
+        ComponentName comp = homeIntent.getComponent();
         ActivityInfo aInfo = null;
+        String homePackageName = SystemProperties.get("persist.home.package", null);
+
+        if (TextUtils.isEmpty(homePackageName)) {
+            homePackageName = "com.android.launcher3";
+        }
+
         try {
-            if (comp != null) {
-                // Factory test.
-                aInfo = AppGlobals.getPackageManager().getActivityInfo(comp, flags, userId);
-            } else {
-                final String resolvedType =
-                        homeIntent.resolveTypeIfNeeded(mService.mContext.getContentResolver());
-                final ResolveInfo info = mTaskSupervisor.resolveIntent(homeIntent, resolvedType,
-                        userId, flags, Binder.getCallingUid(), Binder.getCallingPid());
-                if (info != null) {
-                    aInfo = info.activityInfo;
+            Intent it = new Intent(Intent.ACTION_MAIN);
+            List<ResolveInfo> list = AppGlobals.getPackageManager().queryIntentActivities(homeIntent,
+            homeIntent.resolveTypeIfNeeded(mService.mContext.getContentResolver()), ActivityManagerService.STOCK_PM_FLAGS, userId).getList();
+            final int count = list.size();
+            for (int i = 0; i < count; i++) {
+                ResolveInfo r = list.get(i);
+                if (homePackageName.equals(r.activityInfo.packageName)) {
+                    Slog.d(TAG, "3rd launcher: " + r.activityInfo.packageName + "@" + r.activityInfo.name);
+                    comp = new ComponentName(homePackageName, r.activityInfo.name);
+                    aInfo = r.activityInfo;
+                    break;
                 }
             }
-        } catch (RemoteException e) {
-            // ignore
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         if (aInfo == null) {
-            Slogf.wtf(TAG, new Exception(), "No home screen found for %s and user %d", homeIntent,
-                    userId);
+            PackageManager packageManager = mService.mContext.getPackageManager();
+            homeIntent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+            comp = homeIntent.resolveActivity(packageManager);
+            if (comp != null) {
+                try {
+                    aInfo = packageManager.getActivityInfo(comp, flags);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (aInfo == null) {
+            Slog.wtf(TAG, "No home screen found for " + homeIntent, new Throwable());
             return null;
         }
 
