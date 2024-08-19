@@ -4172,7 +4172,7 @@ public class Activity extends ContextThemeWrapper
                 mActionBar != null && mActionBar.onMenuKeyEvent(event)) {
             return true;
         }
-
+		detectCornersKeyevent(event);
         Window win = getWindow();
         if (win.superDispatchKeyEvent(event)) {
             return true;
@@ -4214,11 +4214,104 @@ public class Activity extends ContextThemeWrapper
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             onUserInteraction();
         }
+		detectCornersGesture(ev);
         if (getWindow().superDispatchTouchEvent(ev)) {
             return true;
         }
         return onTouchEvent(ev);
     }
+
+    private int timesTouched;
+    private long lastClickTime = 0;
+    private void detectCornersGesture(MotionEvent event) {
+        int action = (event.getAction() & MotionEvent.ACTION_MASK) % 5;
+        boolean kioskMode = "true".equals(SystemProperties.get("persist.kioskmode.enable", "false"));
+        int exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"));
+
+		if (kioskMode) {
+			int dpWidth = mDecor.getRight() - mDecor.getLeft();
+			int dpHeight = mDecor.getBottom() - mDecor.getTop();
+			switch (action) {
+				case MotionEvent.ACTION_DOWN:
+					int pointerCount = event.getPointerCount();
+					if (pointerCount == 1 && exitItem == 0) {
+						int gCenterX = (int) event.getX();
+						int gCenterY = (int) event.getY();
+						if (gCenterX > dpWidth / 2 && gCenterY > dpHeight / 2) {
+							long CurrentTime = System.currentTimeMillis();
+							if (lastClickTime == 0) {
+								timesTouched++;
+								lastClickTime = CurrentTime;
+							} else if (CurrentTime - lastClickTime <= 500) {
+								timesTouched++;
+								lastClickTime = CurrentTime;
+								if (timesTouched >= 10) {
+									timesTouched = 0;
+									SystemProperties.set("persist.kioskmode.enable", "false");
+									Intent intent = new Intent();
+				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
+				                    sendBroadcast(intent);
+								}
+							} else {
+								timesTouched = 0;
+								lastClickTime = CurrentTime;
+							}
+						}
+					} else if (pointerCount == 2 && exitItem == 1) {
+						int gTouchX1 = (int) event.getX(0);
+						int gTouchY1 = (int) event.getY(0);
+						int gTouchX2 = (int) event.getX(1);
+						int gTouchY2 = (int) event.getY(1);
+
+						if (gTouchX1 > dpWidth / 2 && gTouchY1 > dpHeight / 2
+								&& gTouchX2 > dpWidth / 2 && gTouchY2 > dpHeight / 2) {
+							long CurrentTime = System.currentTimeMillis();
+							if (lastClickTime == 0) {
+								timesTouched++;
+								lastClickTime = CurrentTime;
+							} else if (CurrentTime - lastClickTime <= 500) {
+								timesTouched++;
+								lastClickTime = CurrentTime;
+								if (timesTouched >= 5) {
+									timesTouched = 0;
+									SystemProperties.set("persist.kioskmode.enable", "false");
+									Intent intent = new Intent();
+				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
+				                    sendBroadcast(intent);
+								}
+							} else {
+								timesTouched = 0;
+								lastClickTime = CurrentTime;
+							}
+						}
+					}
+					return;
+			}
+		}
+	}
+
+	private long backPressTime = 0;
+	private static final long LONG_PRESS_DURATION = 1000;
+	private void detectCornersKeyevent(KeyEvent event) {
+			int action = event.getAction();
+			int keyCode = event.getKeyCode();
+			boolean kioskMode = "true".equals(SystemProperties.get("persist.kioskmode.enable", "false"));
+			int exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"));
+
+			if (kioskMode && exitItem == 2 && keyCode == KeyEvent.KEYCODE_BACK) {
+				if (action == KeyEvent.ACTION_DOWN) {
+					backPressTime = System.currentTimeMillis();
+				} else if (action == KeyEvent.ACTION_UP) {
+					long pressDuration = System.currentTimeMillis() - backPressTime;
+					if (pressDuration >= LONG_PRESS_DURATION) {
+			            SystemProperties.set("persist.kioskmode.enable", "false");
+						Intent intent = new Intent();
+	                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
+	                    sendBroadcast(intent);
+			        }
+				}
+			}
+		}
 
     /**
      * Called to process trackball events.  You can override this to
