@@ -81,6 +81,7 @@ import android.os.StrictMode;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.SystemProperties;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.stats.devicepolicy.DevicePolicyEnums;
@@ -408,11 +409,46 @@ public class ResolverActivity extends Activity implements
                 supportsAlwaysUseOption);
     }
 
+	private void setDefaultLauncher(String defPackageName, String defClassName) {
+        try {
+            final PackageManager pm = getPackageManager();
+			IntentFilter filter = new IntentFilter();
+            filter.addAction("android.intent.action.MAIN");
+            filter.addCategory("android.intent.category.HOME");
+            filter.addCategory("android.intent.category.DEFAULT");
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            List<ResolveInfo> list = new ArrayList<ResolveInfo>();
+            list = pm.queryIntentActivities(intent, 0);
+            final int num = list.size();
+            ComponentName[] set = new ComponentName[num];
+            int bestMatch = 0;
+            for (int i = 0; i < num; i++) {
+                ResolveInfo r = list.get(i);
+                set[i] = new ComponentName(r.activityInfo.packageName, r.activityInfo.name);
+                if (r.match > bestMatch) bestMatch = r.match;
+            }
+            ComponentName preferredActivity = new ComponentName(defPackageName, defClassName);
+            pm.addPreferredActivity(filter, bestMatch, set, preferredActivity);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     protected void onCreate(Bundle savedInstanceState, Intent intent,
             CharSequence title, int defaultTitleRes, Intent[] initialIntents,
             List<ResolveInfo> rList, boolean supportsAlwaysUseOption) {
         setTheme(appliedThemeResId());
         super.onCreate(savedInstanceState);
+		String homePackageName = SystemProperties.get("persist.home.package", "com.android.launcher3");
+		String homeAcitvityName = SystemProperties.get("persist.home.activity", "com.android.launcher3.uioverrides.QuickstepLauncher");
+
+		if (mResolvingHome) {
+			setDefaultLauncher(homePackageName, homeAcitvityName);
+			finish();
+			return;
+		}
 
         mQuietModeManager = createQuietModeManager();
 
