@@ -215,6 +215,10 @@ public class NavigationBar implements View.OnAttachStateChangeListener,
     // @Rockchip add screenshot
     private ContentObserver mScreenshotShowObserver;
     // @end
+    private ContentObserver mBackShowObserver;
+    private ContentObserver mHomeShowObserver;
+    private ContentObserver mRecentsShowObserver;
+    private ContentObserver mVolumeShowObserver;
     private boolean mLongPressHomeEnabled;
 
     private int mDisabledFlags1;
@@ -588,6 +592,56 @@ public class NavigationBar implements View.OnAttachStateChangeListener,
                 mScreenshotShowObserver, UserHandle.USER_ALL);
         // @end
 
+        mBackShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.BACK_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher backButton = mNavigationBarView.getBackButton();
+                backButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.BACK_BUTTON_SHOW), true,
+                mBackShowObserver, UserHandle.USER_ALL);
+
+        mHomeShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.HOME_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher homeButton = mNavigationBarView.getHomeButton();
+                homeButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.HOME_BUTTON_SHOW), true,
+                mHomeShowObserver, UserHandle.USER_ALL);
+
+        mRecentsShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.RECENTS_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher recentsButton = mNavigationBarView.getRecentsButton();
+                recentsButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.RECENTS_BUTTON_SHOW), true,
+                mRecentsShowObserver, UserHandle.USER_ALL);
+
+        mVolumeShowObserver = new ContentObserver(mContext.getMainThreadHandler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean isShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.VOLUME_BUTTON_SHOW, 1) == 1;
+                ButtonDispatcher volumeAddButton = mNavigationBarView.getVolumeAddButton();
+                ButtonDispatcher volumeSubButton = mNavigationBarView.getVolumeSubButton();
+                volumeAddButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+                volumeSubButton.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            }
+        };
+        mContentResolver.registerContentObserver(
+                Settings.System.getUriFor(Settings.System.VOLUME_BUTTON_SHOW), true,
+                mVolumeShowObserver, UserHandle.USER_ALL);
+
         mNavBarHelper.init();
         mAllowForceNavBarHandleOpaque = mContext.getResources().getBoolean(
                 R.bool.allow_force_nav_bar_handle_opaque);
@@ -633,6 +687,19 @@ public class NavigationBar implements View.OnAttachStateChangeListener,
             mContentResolver.unregisterContentObserver(mScreenshotShowObserver);
         }
         // @end
+
+        if (null != mBackShowObserver) {
+            mContentResolver.unregisterContentObserver(mBackShowObserver);
+        }
+        if (null != mHomeShowObserver) {
+            mContentResolver.unregisterContentObserver(mHomeShowObserver);
+        }
+        if (null != mRecentsShowObserver) {
+            mContentResolver.unregisterContentObserver(mRecentsShowObserver);
+        }
+        if (null != mVolumeShowObserver) {
+            mContentResolver.unregisterContentObserver(mVolumeShowObserver);
+        }
 
         mNavBarHelper.removeNavTaskStateUpdater(mNavbarTaskbarStateUpdater);
         mNavBarHelper.destroy();
@@ -1198,10 +1265,32 @@ public class NavigationBar implements View.OnAttachStateChangeListener,
             screenshotButton.setVisibility(View.GONE);
         }
 
+        ButtonDispatcher backButton = mNavigationBarView.getBackButton();
+        boolean isBackShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.BACK_BUTTON_SHOW, 1) == 1;
+        if (isBackShow) {
+            backButton.setVisibility(View.VISIBLE);
+        } else {
+            backButton.setVisibility(View.GONE);
+        }
+
+        boolean isHomeShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.HOME_BUTTON_SHOW, 1) == 1;
+        if (isHomeShow) {
+            homeButton.setVisibility(View.VISIBLE);
+        } else {
+            homeButton.setVisibility(View.GONE);
+        }
+
+        boolean isRecentShow = Settings.System.getInt(mContext.getContentResolver(), Settings.System.RECENTS_BUTTON_SHOW, 1) == 1;
+        if (isRecentShow) {
+            recentsButton.setVisibility(View.VISIBLE);
+        } else {
+            recentsButton.setVisibility(View.GONE);
+        }
+
         ButtonDispatcher volumeAddButton=mNavigationBarView.getVolumeAddButton();
         ButtonDispatcher volumeSubButton=mNavigationBarView.getVolumeSubButton();
         //boolean isShowVolumeButton = "true".equals(SystemProperties.get("ro.rk.systembar.voiceicon","true"));
-        boolean isShowVolumeButton = true;
+        boolean isShowVolumeButton = Settings.System.getInt(mContext.getContentResolver(), Settings.System.VOLUME_BUTTON_SHOW, 1) == 1;
         if(isShowVolumeButton){
             volumeAddButton.setVisibility(View.VISIBLE);
             volumeSubButton.setVisibility(View.VISIBLE);

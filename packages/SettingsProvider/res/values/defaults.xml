@@ -265,4 +265,25 @@
     <!-- should show the screenshot button default -->
     <integer name="def_screenshot_button_show">0</integer>
 
+    <!-- should show the back button default -->
+    <integer name="def_back_button_show">1</integer>
+
+    <!-- should show the home button default -->
+    <integer name="def_home_button_show">1</integer>
+
+    <!-- should show the recents button default -->
+    <integer name="def_recents_button_show">1</integer>
+
+    <!-- should show the volume button default -->
+    <integer name="def_volume_button_show">0</integer>
+
+    <!-- should lock the status bar default -->
+    <integer name="def_lock_status_bar">0</integer>
+
+    <!-- should enable autostart app -->
+    <integer name="def_autostart_app_enable">0</integer>
+
+    <!-- autostart app name -->
+    <string name="def_autostart_app_name"></string>
+
 </resources>

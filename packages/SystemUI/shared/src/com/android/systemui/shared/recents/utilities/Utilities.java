@@ -127,7 +127,8 @@ public class Utilities {
 
         float smallestWidth = dpiFromPx(Math.min(bounds.width(), bounds.height()),
                 context.getResources().getConfiguration().densityDpi);
-        return smallestWidth >= TABLET_MIN_DPS;
+        //return smallestWidth >= TABLET_MIN_DPS;
+        return false;
     }
 
     public static float dpiFromPx(float size, int densityDpi) {

@@ -2652,7 +2652,7 @@ public class StatusBar extends SystemUI implements
         @Override
         public void onReceive(Context context, Intent intent) {
             Trace.beginSection("StatusBar#onReceive");
-            if (DEBUG) Log.v(TAG, "onReceive: " + intent);
+            if (true) Log.v(TAG, "onReceive: " + intent);
             String action = intent.getAction();
             if (Intent.ACTION_CLOSE_SYSTEM_DIALOGS.equals(action)) {
                 KeyboardShortcuts.dismiss();
@@ -2683,6 +2683,12 @@ public class StatusBar extends SystemUI implements
             else if (DevicePolicyManager.ACTION_SHOW_DEVICE_MONITORING_DIALOG.equals(action)) {
                 mQSPanelController.showDeviceMonitoringDialog();
             }
+            else if (HIDE_NAVIGATION_BAR.equals(action)) {
+                hideNavigation();
+            }
+            else if (SHOW_NAVIGATION_BAR.equals(action)) {
+                displayNavigation();
+            }
             Trace.endSection();
         }
     };
@@ -2695,7 +2701,7 @@ public class StatusBar extends SystemUI implements
         ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
         if (tempStatusBar != null){
             tempStatusBar.setVisibility(View.GONE);
-            //SystemProperties.set("sys.systembar.hide","1");
+            SystemProperties.set("persist.fullscreen.enable", "true");
         }
     }
 
@@ -2710,7 +2716,7 @@ public class StatusBar extends SystemUI implements
             tempStatusBar.setVisibility(View.VISIBLE);
             requestNotificationUpdate("StatusBar state changed");
             checkBarModes();
-            //SystemProperties.set("sys.systembar.hide","0");
+            SystemProperties.set("persist.fullscreen.enable", "false");
         }
     }
 

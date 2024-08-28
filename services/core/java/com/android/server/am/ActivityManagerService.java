@@ -7724,6 +7724,11 @@ public class ActivityManagerService extends IActivityManager.Stub
             mAtmInternal.showSystemReadyErrorDialogsIfNeeded();
             t.traceEnd();
 
+            if (Settings.System.getInt(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_ENABLE, 0) == 1) {
+                String autostartApp = Settings.System.getString(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_NAME);
+                if (!"".equals(autostartApp))
+                    startAppOrService(mContext, autostartApp);
+            }
 
             if (bootingSystemUser) {
                 t.traceBegin("sendUserStartBroadcast");
@@ -7803,6 +7808,30 @@ public class ActivityManagerService extends IActivityManager.Stub
 
             t.traceEnd(); // ActivityManagerStartApps
             t.traceEnd(); // PhaseActivityManagerReady
+        }
+    }
+
+    private void startAppOrService(Context context,String appPackage) {
+        PackageManager doupackageManager = context.getPackageManager();
+        Log.d(TAG, "startAppOrService");
+        int delayTime;
+        if (Build.MODEL.equals("Tinker Board 3 RV"))
+            delayTime = 12000;
+        else
+            delayTime = 8000;
+        try {
+            new Handler().postDelayed(new Runnable() {
+                public void run() {
+                    Intent intent = new Intent();
+                    intent = doupackageManager.getLaunchIntentForPackage(appPackage);
+                    if (intent != null) {
+                        Log.d(TAG, "startAppOrService: " + appPackage);
+                        context.startActivity(intent);
+                    }
+                }
+            }, delayTime);
+        } catch (Exception e) {
+            Log.i(TAG, "startApp_exception: " + e);
         }
     }
 

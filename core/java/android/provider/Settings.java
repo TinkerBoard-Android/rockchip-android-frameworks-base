@@ -4900,6 +4900,55 @@ public final class Settings {
         public static final String SCREENSHOT_BUTTON_SHOW = "screenshot_button_show";
 
         /**
+         * back button show.
+         *
+         * @hide
+         */
+        public static final String BACK_BUTTON_SHOW = "back_button_show";
+
+        /**
+         * home button show.
+         *
+         * @hide
+         */
+        public static final String HOME_BUTTON_SHOW = "home_button_show";
+
+        /**
+         * recents button show.
+         *
+         * @hide
+         */
+        public static final String RECENTS_BUTTON_SHOW = "recents_button_show";
+
+        /**
+         * volume button show.
+         *
+         * @hide
+         */
+        public static final String VOLUME_BUTTON_SHOW = "volume_button_show";
+
+        /**
+         * lock status bar.
+         *
+         * @hide
+         */
+        public static final String LOCK_STATUS_BAR = "lock_status_bar";
+
+        /**
+         * autostart app enable.
+         *
+         * @hide
+         */
+        public static final String AUTOSTART_APP_ENABLE = "autostart_app_enable";
+
+        /**
+         * autostart app name.
+         *
+         * @hide
+         */
+        public static final String AUTOSTART_APP_NAME = "autostart_app_name";
+
+        /**
          * Whether the phone vibrates when it is ringing due to an incoming call. This will
          * be used by Phone and Setting apps; it shouldn't affect other apps.
          * The value is boolean (1 or 0).
@@ -5282,6 +5331,13 @@ public final class Settings {
             PUBLIC_SETTINGS.add(HAPTIC_FEEDBACK_ENABLED);
             PUBLIC_SETTINGS.add(SHOW_WEB_SUGGESTIONS);
             PUBLIC_SETTINGS.add(VIBRATE_WHEN_RINGING);
+            PUBLIC_SETTINGS.add(VOLUME_BUTTON_SHOW);
+            PUBLIC_SETTINGS.add(BACK_BUTTON_SHOW);
+            PUBLIC_SETTINGS.add(HOME_BUTTON_SHOW);
+            PUBLIC_SETTINGS.add(RECENTS_BUTTON_SHOW);
+            PUBLIC_SETTINGS.add(LOCK_STATUS_BAR);
+            PUBLIC_SETTINGS.add(AUTOSTART_APP_ENABLE);
+            PUBLIC_SETTINGS.add(AUTOSTART_APP_NAME);
         }
 
         /**

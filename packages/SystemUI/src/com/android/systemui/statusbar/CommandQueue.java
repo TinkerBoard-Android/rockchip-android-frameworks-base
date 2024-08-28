@@ -47,6 +47,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
@@ -171,6 +172,7 @@ public class CommandQueue extends IStatusBar.Stub implements
     private int mLastUpdatedImeDisplayId = INVALID_DISPLAY;
     private ProtoTracer mProtoTracer;
     private final @Nullable CommandRegistry mRegistry;
+    private final Context mContext;
 
     /**
      * These methods are called back on the main thread.
@@ -420,6 +422,7 @@ public class CommandQueue extends IStatusBar.Stub implements
     public CommandQueue(Context context, ProtoTracer protoTracer, CommandRegistry registry) {
         mProtoTracer = protoTracer;
         mRegistry = registry;
+        mContext = context;
         context.getSystemService(DisplayManager.class).registerDisplayListener(this, mHandler);
         // We always have default display.
         setDisabled(DEFAULT_DISPLAY, DISABLE_NONE, DISABLE2_NONE);
@@ -447,6 +450,11 @@ public class CommandQueue extends IStatusBar.Stub implements
     public boolean panelsEnabled() {
         final int disabled1 = getDisabled1(DEFAULT_DISPLAY);
         final int disabled2 = getDisabled2(DEFAULT_DISPLAY);
+
+        boolean isLockStatusBar = Settings.System.getInt(mContext.getContentResolver(), Settings.System.LOCK_STATUS_BAR, 1) == 1;
+        if (isLockStatusBar)
+            return false;
+
         return (disabled1 & StatusBarManager.DISABLE_EXPAND) == 0
                 && (disabled2 & StatusBarManager.DISABLE2_NOTIFICATION_SHADE) == 0
                 && !ONLY_CORE_APPS;
