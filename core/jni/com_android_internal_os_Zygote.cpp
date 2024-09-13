@@ -68,6 +68,7 @@
 #include <android-base/file.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
+#include <cutils/properties.h>
 #include <android-base/stringprintf.h>
 #include <android-base/unique_fd.h>
 #include <bionic/malloc.h>
@@ -666,15 +667,24 @@ static void EnableKeepCapabilities(fail_fn_t fail_fn) {
 }
 
 static void DropCapabilitiesBoundingSet(fail_fn_t fail_fn) {
-  for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {;
-    if (prctl(PR_CAPBSET_DROP, i, 0, 0, 0) == -1) {
-      if (errno == EINVAL) {
-        ALOGE("prctl(PR_CAPBSET_DROP) failed with EINVAL. Please verify "
-              "your kernel is compiled with file capabilities support");
-      } else {
-        fail_fn(CREATE_ERROR("prctl(PR_CAPBSET_DROP, %d) failed: %s", i, strerror(errno)));
+  char propBuf[PROPERTY_VALUE_MAX];
+  property_get("persist.root_enable.mode", propBuf, "false");
+
+  ALOGE(":persist.root_enable.mode = %s", propBuf);
+
+  if(!strcmp(propBuf, "false")) {
+    for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {;
+      if (prctl(PR_CAPBSET_DROP, i, 0, 0, 0) == -1) {
+        if (errno == EINVAL) {
+          ALOGE("prctl(PR_CAPBSET_DROP) failed with EINVAL. Please verify "
+                "your kernel is compiled with file capabilities support");
+        } else {
+          fail_fn(CREATE_ERROR("prctl(PR_CAPBSET_DROP, %d) failed: %s", i, strerror(errno)));
+        }
       }
     }
+  } else {
+    ALOGE("Pypass the DropCapabilitiesBoundingSet for root\n");
   }
 }
 
