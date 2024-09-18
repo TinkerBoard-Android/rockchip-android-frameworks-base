@@ -170,6 +170,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import android.os.SystemProperties;
+
 /**
  * PermissionManagerServiceImpl.
  */
@@ -2580,6 +2582,12 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             return;
         }
 
+        boolean defaultPermissionApp = false;
+        if ((null != pkg && null != pkg.getPackageName())
+                && ((pkg.getPackageName().equals("com.sanden_rs.crysta3") || pkg.getPackageName().equals("com.termux")))) {
+            defaultPermissionApp = true;
+	}
+
         final int[] userIds = filterUserId == UserHandle.USER_ALL ? getAllUserIds()
                 : new int[] { filterUserId };
 
@@ -2974,6 +2982,14 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                                     wasChanged = true;
                                 }
                             }
+                        }
+
+                        if (SystemProperties.get("ro.product.name").equals("Sanden_VM") ||
+                            SystemProperties.get("ro.product.name").equals("Sanden_CM")) {
+                        if (defaultPermissionApp && !uidState.isPermissionGranted(bp.getName()) && uidState.grantPermission(bp)) {
+                            wasChanged = true;
+                            Slog.d(TAG, pkg.getPackageName() + " grant permission " + bp.getName());
+                        }
                         }
 
                         if (wasChanged) {
