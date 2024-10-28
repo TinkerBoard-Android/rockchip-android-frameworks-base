@@ -7816,7 +7816,7 @@ public class ActivityManagerService extends IActivityManager.Stub
         Log.d(TAG, "startAppOrService");
         int delayTime;
         if (Build.MODEL.equals("RVMON7 CTRL PCB"))
-            delayTime = 12000;
+            delayTime = 14000;
         else
             delayTime = 8000;
         try {
