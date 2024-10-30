@@ -472,7 +472,7 @@ public class AudioService extends IAudioService.Stub
 
     /** Minimum volume index values for audio streams */
     protected static int[] MIN_STREAM_VOLUME = new int[] {
-        1,  // STREAM_VOICE_CALL
+        0,  // STREAM_VOICE_CALL
         0,  // STREAM_SYSTEM
         0,  // STREAM_RING
         0,  // STREAM_MUSIC
