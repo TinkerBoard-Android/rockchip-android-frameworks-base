@@ -86,8 +86,16 @@ public class AmbientDisplayConfiguration {
 
     /** @hide */
     public boolean pulseOnNotificationEnabled(int user) {
-        return boolSettingDefaultOn(Settings.Secure.DOZE_ENABLED, user)
+        if (SystemProperties.get("ro.product.name").equals("Sanden_CM"))
+        {
+            return boolSettingDefaultOff(Settings.Secure.DOZE_ENABLED, user)
                 && pulseOnNotificationAvailable();
+        }
+        else
+        {
+            return boolSettingDefaultOn(Settings.Secure.DOZE_ENABLED, user)
+                && pulseOnNotificationAvailable();
+        }
     }
 
     /** @hide */
