@@ -27,6 +27,7 @@ import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
 import android.annotation.Nullable;
 import android.database.ContentObserver;
 import android.os.UserHandle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
@@ -542,9 +543,18 @@ public class KeyguardClockSwitchController extends ViewController<KeyguardClockS
     }
 
     private void updateDoubleLineClock() {
-        mCanShowDoubleLineClock = mSecureSettings.getIntForUser(
-            Settings.Secure.LOCKSCREEN_USE_DOUBLE_LINE_CLOCK, 1,
-                UserHandle.USER_CURRENT) != 0;
+        if (SystemProperties.get("ro.product.name").equals("Sanden_CM"))
+        {
+            mCanShowDoubleLineClock = mSecureSettings.getIntForUser(
+                Settings.Secure.LOCKSCREEN_USE_DOUBLE_LINE_CLOCK, 0,
+                    UserHandle.USER_CURRENT) != 0;
+        }
+        else
+        {
+            mCanShowDoubleLineClock = mSecureSettings.getIntForUser(
+                Settings.Secure.LOCKSCREEN_USE_DOUBLE_LINE_CLOCK, 1,
+                    UserHandle.USER_CURRENT) != 0;
+        }
 
         if (!mCanShowDoubleLineClock) {
             mUiExecutor.execute(() -> displayClock(KeyguardClockSwitch.SMALL, /* animate */ true));
