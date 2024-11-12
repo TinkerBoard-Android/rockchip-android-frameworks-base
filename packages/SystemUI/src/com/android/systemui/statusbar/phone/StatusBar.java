@@ -2431,7 +2431,7 @@ public class StatusBar extends SystemUI implements
         mNotificationShadeWindowController.attach();
         mStatusBarWindowController.attach();
         //full screen
-        if (SystemProperties.getBoolean("persist.fullscreen.enable", false)) {
+        if (SystemProperties.getBoolean("persist.vendor.fullscreen.enable", false)) {
             Log.d(TAG,"HIDE_NAVIGATION_BAR");
             hideNavigation();
         }
@@ -2701,7 +2701,7 @@ public class StatusBar extends SystemUI implements
         ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
         if (tempStatusBar != null){
             tempStatusBar.setVisibility(View.GONE);
-            SystemProperties.set("persist.fullscreen.enable", "true");
+            SystemProperties.set("persist.vendor.fullscreen.enable", "true");
         }
     }
 
@@ -2716,7 +2716,7 @@ public class StatusBar extends SystemUI implements
             tempStatusBar.setVisibility(View.VISIBLE);
             requestNotificationUpdate("StatusBar state changed");
             checkBarModes();
-            SystemProperties.set("persist.fullscreen.enable", "false");
+            SystemProperties.set("persist.vendor.fullscreen.enable", "false");
         }
     }
 
