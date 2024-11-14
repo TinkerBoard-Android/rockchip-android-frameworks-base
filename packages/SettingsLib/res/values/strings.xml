@@ -545,6 +545,10 @@
     <string name="enable_adb_summary">Debug mode when USB is connected</string>
     <!-- Setting title to revoke secure USB debugging authorizations -->
     <string name="clear_adb_keys">Revoke USB debugging authorizations</string>
+    <!-- [CHAR LIMIT=32] Setting title for USB debugging over Ethernet switch -->
+    <string name="enable_adb_ethernet">Ethernet debugging</string>
+    <!-- [CHAR LIMIT=NONE] Setting checkbox summary for whether to enable Ethernet debugging support -->
+    <string name="enable_adb_ethernet_summary">Debug mode when Ethernet is available</string>
     <!-- [CHAR LIMIT=32] Setting title for ADB wireless switch -->
     <string name="enable_adb_wireless">Wireless debugging</string>
     <!-- [CHAR LIMIT=NONE] Setting checkbox summary for whether to enable Wireless debugging support on the phone -->
