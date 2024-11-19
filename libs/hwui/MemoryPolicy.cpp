@@ -25,7 +25,7 @@
 
 namespace android::uirenderer {
 
-constexpr static MemoryPolicy sDefaultMemoryPolicy;
+static MemoryPolicy sDefaultMemoryPolicy;
 constexpr static MemoryPolicy sPersistentOrSystemPolicy{
         .contextTimeout = 10_s,
         .useAlternativeUiHidden = true,
@@ -49,6 +49,10 @@ const MemoryPolicy& loadMemoryPolicy() {
     if (Properties::isSystemOrPersistent) {
         return sPersistentOrSystemPolicy;
     }
+
+    sDefaultMemoryPolicy.surfaceSizeMultiplier = std::stof(base::GetProperty("debug.hwui.surface_size_multiplier", "144.0"));
+    sDefaultMemoryPolicy.backgroundRetentionPercent = std::stof(base::GetProperty("debug.hwui.background_retention_percent", "1.5"));
+    sDefaultMemoryPolicy.useAlternativeUiHidden = base::GetBoolProperty("debug.hwui.use_alternative_ui_hidden", true);
     std::string memoryPolicy = base::GetProperty(PROPERTY_MEMORY_POLICY, "");
     if (memoryPolicy == "default") {
         return sDefaultMemoryPolicy;
