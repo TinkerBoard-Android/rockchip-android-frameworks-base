@@ -4451,7 +4451,7 @@ public class Activity extends ContextThemeWrapper
 								lastClickTime = CurrentTime;
 								if (timesTouched >= 10) {
 									timesTouched = 0;
-									SystemProperties.set("persist.kioskmode.enable", "false");
+									//SystemProperties.set("persist.kioskmode.enable", "false");
 									Intent intent = new Intent();
 				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
 				                    sendBroadcast(intent);
@@ -4478,7 +4478,7 @@ public class Activity extends ContextThemeWrapper
 								lastClickTime = CurrentTime;
 								if (timesTouched >= 5) {
 									timesTouched = 0;
-									SystemProperties.set("persist.kioskmode.enable", "false");
+									//SystemProperties.set("persist.kioskmode.enable", "false");
 									Intent intent = new Intent();
 				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
 				                    sendBroadcast(intent);
@@ -4508,7 +4508,7 @@ public class Activity extends ContextThemeWrapper
 				} else if (action == KeyEvent.ACTION_UP) {
 					long pressDuration = System.currentTimeMillis() - backPressTime;
 					if (pressDuration >= LONG_PRESS_DURATION) {
-			            SystemProperties.set("persist.kioskmode.enable", "false");
+			            //SystemProperties.set("persist.kioskmode.enable", "false");
 						Intent intent = new Intent();
 	                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
 	                    sendBroadcast(intent);
