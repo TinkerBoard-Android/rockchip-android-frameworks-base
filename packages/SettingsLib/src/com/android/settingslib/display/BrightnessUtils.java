@@ -17,6 +17,8 @@
 package com.android.settingslib.display;
 
 import android.util.MathUtils;
+import android.os.SystemProperties;
+
 
 public class BrightnessUtils {
 
@@ -77,19 +79,27 @@ public class BrightnessUtils {
     public static final float convertGammaToLinearFloat(int val, float min, float max) {
         final float normalizedVal = MathUtils.norm(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX, val);
         final float ret;
-        if (normalizedVal <= R) {
-            ret = MathUtils.sq(normalizedVal / R);
-        } else {
-            ret = MathUtils.exp((normalizedVal - C) / A) + B;
+
+        //make brightness bar linear for Sanden project
+        if (SystemProperties.get("ro.product.name").equals("RVMON7_CTRL_PCB")) {
+            float ratio = (float)val / GAMMA_SPACE_MAX;
+            return min + (float)(ratio * (max -min));
         }
+        else {
+            if (normalizedVal <= R) {
+                ret = MathUtils.sq(normalizedVal / R);
+            } else {
+                ret = MathUtils.exp((normalizedVal - C) / A) + B;
+            }
 
-        // HLG is normalized to the range [0, 12], ensure that value is within that range,
-        // it shouldn't be out of bounds.
-        final float normalizedRet = MathUtils.constrain(ret, 0, 12);
+            // HLG is normalized to the range [0, 12], ensure that value is within that range,
+            // it shouldn't be out of bounds.
+            final float normalizedRet = MathUtils.constrain(ret, 0, 12);
 
-        // Re-normalize to the range [0, 1]
-        // in order to derive the correct setting value.
-        return MathUtils.lerp(min, max, normalizedRet / 12);
+            // Re-normalize to the range [0, 1]
+            // in order to derive the correct setting value.
+            return MathUtils.lerp(min, max, normalizedRet / 12);
+        }
     }
 
     /**
@@ -130,12 +140,20 @@ public class BrightnessUtils {
         // For some reason, HLG normalizes to the range [0, 12] rather than [0, 1]
         final float normalizedVal = MathUtils.norm(min, max, val) * 12;
         final float ret;
-        if (normalizedVal <= 1f) {
-            ret = MathUtils.sqrt(normalizedVal) * R;
-        } else {
-            ret = A * MathUtils.log(normalizedVal - B) + C;
-        }
 
-        return Math.round(MathUtils.lerp(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX, ret));
+        //make brightness bar linear for Sanden project
+        if (SystemProperties.get("ro.product.name").equals("RVMON7_CTRL_PCB")) {
+            float ratio = (float)(val - min) / (max - min);
+            return (int)(ratio * GAMMA_SPACE_MAX);
+        }
+        else {
+            if (normalizedVal <= 1f) {
+                ret = MathUtils.sqrt(normalizedVal) * R;
+            } else {
+                ret = A * MathUtils.log(normalizedVal - B) + C;
+            }
+
+            return Math.round(MathUtils.lerp(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX, ret));
+        }
     }
 }
