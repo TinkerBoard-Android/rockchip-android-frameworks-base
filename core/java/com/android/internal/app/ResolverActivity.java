@@ -376,10 +376,7 @@ public class ResolverActivity extends Activity implements
         String homeAcitvityName = "";
         String homePackageName = SystemProperties.get("persist.home.package", "com.android.launcher3");
         Log.d(TAG, "Build.MODEL = " + Build.MODEL);
-        if (Build.MODEL.equals("RVMON7 CTRL PCB"))
-            homeAcitvityName = SystemProperties.get("persist.home.activity", "com.android.launcher3.Launcher3QuickStepGo");
-        else
-            homeAcitvityName = SystemProperties.get("persist.home.activity", "com.android.launcher3.uioverrides.QuickstepLauncher");
+        homeAcitvityName = SystemProperties.get("persist.home.activity", "com.android.launcher3.uioverrides.QuickstepLauncher");
 
         if (mResolvingHome) {
             setDefaultLauncher(homePackageName, homeAcitvityName);
