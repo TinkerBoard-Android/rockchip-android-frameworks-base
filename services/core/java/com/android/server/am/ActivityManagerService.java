@@ -7815,13 +7815,7 @@ public class ActivityManagerService extends IActivityManager.Stub
         PackageManager doupackageManager = context.getPackageManager();
         Log.d(TAG, "startAppOrService");
         int delayTime;
-
-        if ("emmc".equals(SystemProperties.get("ro.boot.storagemedia"))) {
-            Log.d(TAG, "storagemedia is emmc, delay time is 5s");
-            delayTime = 5000;
-        } else {
-            delayTime = 8000;
-        }
+        delayTime = 8000;
         try {
             new Handler().postDelayed(new Runnable() {
                 public void run() {
