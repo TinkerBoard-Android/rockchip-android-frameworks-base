@@ -1484,6 +1484,8 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     static final int FIRST_BROADCAST_QUEUE_MSG = 200;
 
+    static final int AUTO_START_APP_MSG = 300;
+
     /**
      * Flag whether the current user is a "monkey", i.e. whether
      * the UI is driven by a UI automation tool.
@@ -1796,6 +1798,30 @@ public class ActivityManagerService extends IActivityManager.Stub
                 case WAIT_FOR_CONTENT_PROVIDER_TIMEOUT_MSG: {
                     synchronized (ActivityManagerService.this) {
                         ((ContentProviderRecord) msg.obj).onProviderPublishStatusLocked(false);
+                    }
+                } break;
+                case AUTO_START_APP_MSG: {
+                    Bundle bundle = (Bundle) msg.obj;
+                    String appPackage = bundle.getString("appPackage");
+                    PackageManager doupackageManager = mContext.getPackageManager();
+
+                    try {
+                        Intent intent = new Intent();
+                        intent = doupackageManager.getLaunchIntentForPackage(appPackage);
+                        Log.d(TAG, "AUTO_START_APP_MSG: intent = " + intent + ", appPackage = " + appPackage);
+                        if (intent != null) {
+                            Log.d(TAG, "AUTO_START_APP_MSG: " + appPackage);
+                            mContext.startActivity(intent);
+                        } else {
+                            Log.d(TAG, "AUTO_START_APP_MSG: package intent is null, try to start activity again");
+                            Message nmsg = mHandler.obtainMessage(AUTO_START_APP_MSG);
+                            Bundle nbundle = new Bundle();
+                            nbundle.putString("appPackage", appPackage);
+                            nmsg.obj = nbundle;
+                            mHandler.sendMessageDelayed(nmsg, 500);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "AUTO_START_APP_MSG: failed to launch app: " + appPackage, e);
                     }
                 } break;
             }
@@ -7726,8 +7752,13 @@ public class ActivityManagerService extends IActivityManager.Stub
 
             if (Settings.System.getInt(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_ENABLE, 0) == 1) {
                 String autostartApp = Settings.System.getString(mContext.getContentResolver(), Settings.System.AUTOSTART_APP_NAME);
-                if (!"".equals(autostartApp))
-                    startAppOrService(mContext, autostartApp);
+                if (!"".equals(autostartApp)) {
+                    Message nmsg = mHandler.obtainMessage(AUTO_START_APP_MSG);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("appPackage", autostartApp);
+                    nmsg.obj = bundle;
+                    mHandler.sendMessageDelayed(nmsg, 1000);
+                }
             }
 
             if (bootingSystemUser) {
@@ -7808,27 +7839,6 @@ public class ActivityManagerService extends IActivityManager.Stub
 
             t.traceEnd(); // ActivityManagerStartApps
             t.traceEnd(); // PhaseActivityManagerReady
-        }
-    }
-
-    private void startAppOrService(Context context,String appPackage) {
-        PackageManager doupackageManager = context.getPackageManager();
-        Log.d(TAG, "startAppOrService");
-        int delayTime;
-        delayTime = 8000;
-        try {
-            new Handler().postDelayed(new Runnable() {
-                public void run() {
-                    Intent intent = new Intent();
-                    intent = doupackageManager.getLaunchIntentForPackage(appPackage);
-                    if (intent != null) {
-                        Log.d(TAG, "startAppOrService: " + appPackage);
-                        context.startActivity(intent);
-                    }
-                }
-            }, delayTime);
-        } catch (Exception e) {
-            Log.i(TAG, "startApp_exception: " + e);
         }
     }
 
