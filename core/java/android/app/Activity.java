@@ -4237,7 +4237,7 @@ public class Activity extends ContextThemeWrapper
 					if (pointerCount == 1 && exitItem == 0) {
 						int gCenterX = (int) event.getX();
 						int gCenterY = (int) event.getY();
-						if (gCenterX > dpWidth / 2 && gCenterY > dpHeight / 2) {
+						if (gCenterX > (dpWidth - dpWidth / 5) && gCenterY > (dpHeight - dpHeight / 5)) {
 							long CurrentTime = System.currentTimeMillis();
 							if (lastClickTime == 0) {
 								timesTouched++;
@@ -4263,8 +4263,8 @@ public class Activity extends ContextThemeWrapper
 						int gTouchX2 = (int) event.getX(1);
 						int gTouchY2 = (int) event.getY(1);
 
-						if (gTouchX1 > dpWidth / 2 && gTouchY1 > dpHeight / 2
-								&& gTouchX2 > dpWidth / 2 && gTouchY2 > dpHeight / 2) {
+						if (gTouchX1 > (dpWidth - dpWidth / 5) && gTouchY1 > (dpHeight - dpHeight / 5)
+								&& gTouchX2 > (dpWidth - dpWidth / 5) && gTouchY2 > (dpHeight - dpHeight / 5)) {
 							long CurrentTime = System.currentTimeMillis();
 							if (lastClickTime == 0) {
 								timesTouched++;
