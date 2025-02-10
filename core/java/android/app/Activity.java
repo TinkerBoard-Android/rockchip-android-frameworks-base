@@ -4223,10 +4223,14 @@ public class Activity extends ContextThemeWrapper
 
     private int timesTouched;
     private long lastClickTime = 0;
+    int exitItem = 0;
     private void detectCornersGesture(MotionEvent event) {
         int action = (event.getAction() & MotionEvent.ACTION_MASK) % 5;
         boolean kioskMode = "true".equals(SystemProperties.get("persist.kioskmode.enable", "false"));
-        int exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"));
+        if (Build.MODEL.equals("RVMON7 CTRL PCB"))
+            exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "1"));
+        else
+            exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"));
 
 		if (kioskMode) {
 			int dpWidth = mDecor.getRight() - mDecor.getLeft();
