@@ -2431,7 +2431,8 @@ public class StatusBar extends SystemUI implements
         mNotificationShadeWindowController.attach();
         mStatusBarWindowController.attach();
         //full screen
-        if (SystemProperties.getBoolean("persist.vendor.fullscreen.enable", false)) {
+        if (SystemProperties.getBoolean("persist.vendor.fullscreen.enable", false) &&
+            !SystemProperties.getBoolean("persist.navbar.enable", true)) {
             Log.d(TAG,"HIDE_NAVIGATION_BAR");
             hideNavigation();
         }
