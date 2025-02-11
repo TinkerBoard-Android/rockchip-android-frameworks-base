@@ -2063,7 +2063,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mNotificationShadeWindowController.attach();
         mStatusBarWindowController.attach();
         //full screen
-        if (SystemProperties.getBoolean("persist.fullscreen.enable", false)) {
+        if (SystemProperties.getBoolean("persist.fullscreen.enable", false) &&
+            !SystemProperties.getBoolean("persist.navbar.enable", true)) {
             Log.d(TAG,"HIDE_NAVIGATION_BAR");
             hideNavigation();
         }
