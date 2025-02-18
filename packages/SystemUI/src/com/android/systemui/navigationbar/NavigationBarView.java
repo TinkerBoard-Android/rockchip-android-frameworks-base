@@ -61,6 +61,7 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 import android.widget.FrameLayout;
+import android.provider.Settings;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.Utils;
@@ -841,7 +842,15 @@ public class NavigationBarView extends FrameLayout implements
         getHomeButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
         getRecentsButton().setVisibility(disableRecent  ? View.INVISIBLE : View.VISIBLE);
         getHomeHandle().setVisibility(disableHomeHandle ? View.INVISIBLE : View.VISIBLE);
-        notifyActiveTouchRegions();
+
+	getBackButton().setVisibility(!(Settings.System.getInt(getContext().getContentResolver(), Settings.System.BACK_BUTTON_SHOW, 1) == 1)
+		? View.GONE : View.VISIBLE);
+	getHomeButton().setVisibility(!(Settings.System.getInt(getContext().getContentResolver(), Settings.System.HOME_BUTTON_SHOW, 1) == 1)
+		? View.GONE : View.VISIBLE);
+	getRecentsButton().setVisibility(!(Settings.System.getInt(getContext().getContentResolver(), Settings.System.RECENTS_BUTTON_SHOW, 1) == 1)
+		? View.GONE : View.VISIBLE);
+
+	notifyActiveTouchRegions();
     }
 
     @VisibleForTesting
