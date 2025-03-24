@@ -25,6 +25,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -100,13 +101,17 @@ public class InstallSuccess extends AlertActivity {
         mAlert.setView(R.layout.install_content_view);
         mAlert.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.launch), null,
                 null);
-        mAlert.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.done),
-                (ignored, ignored2) -> {
-                    if (mAppPackageName != null) {
-                        Log.i(LOG_TAG, "Finished installing " + mAppPackageName);
-                    }
-                    finish();
-                }, null);
+        if (Build.MODEL.equals("RVMON7 CTRL PCB")) {
+            getWindow().setCloseOnTouchOutside(false);
+        } else {
+            mAlert.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.done),
+                    (ignored, ignored2) -> {
+                        if (mAppPackageName != null) {
+                            Log.i(LOG_TAG, "Finished installing " + mAppPackageName);
+                        }
+                        finish();
+                    }, null);
+        }
         setupAlert();
         requireViewById(R.id.install_success).setVisibility(View.VISIBLE);
         // Enable or disable "launch" button
