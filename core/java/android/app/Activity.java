@@ -4427,72 +4427,60 @@ public class Activity extends ContextThemeWrapper
 
     private int timesTouched;
     private long lastClickTime = 0;
-    private void detectCornersGesture(MotionEvent event) {
-        int action = (event.getAction() & MotionEvent.ACTION_MASK) % 5;
-        boolean kioskMode = "true".equals(SystemProperties.get("persist.kioskmode.enable", "false"));
-        int exitItem = Integer.parseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"));
+    private static final long TAP_WINDOW_MS = 1000L;
+    private static final String ACTION_DISABLE_KIOSK = "android.intent.action.DISABLE_KIOSKMODE";
+    private long lastCornerTapMs = 0L;
+    private int cornerTapCount = 0;
 
-		if (kioskMode) {
-			int dpWidth = mDecor.getRight() - mDecor.getLeft();
-			int dpHeight = mDecor.getBottom() - mDecor.getTop();
-			switch (action) {
-				case MotionEvent.ACTION_DOWN:
-					int pointerCount = event.getPointerCount();
-					if (pointerCount == 1 && exitItem == 0) {
-						int gCenterX = (int) event.getX();
-						int gCenterY = (int) event.getY();
-						if (gCenterX > (dpWidth - dpWidth / 5) && gCenterY > (dpHeight - dpHeight / 5)) {
-							long CurrentTime = System.currentTimeMillis();
-							if (lastClickTime == 0) {
-								timesTouched++;
-								lastClickTime = CurrentTime;
-							} else if (CurrentTime - lastClickTime <= 500) {
-								timesTouched++;
-								lastClickTime = CurrentTime;
-								if (timesTouched >= 10) {
-									timesTouched = 0;
-									//SystemProperties.set("persist.kioskmode.enable", "false");
-									Intent intent = new Intent();
-				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
-				                    sendBroadcast(intent);
-								}
-							} else {
-								timesTouched = 0;
-								lastClickTime = CurrentTime;
-							}
-						}
-					} else if (pointerCount == 2 && exitItem == 1) {
-						int gTouchX1 = (int) event.getX(0);
-						int gTouchY1 = (int) event.getY(0);
-						int gTouchX2 = (int) event.getX(1);
-						int gTouchY2 = (int) event.getY(1);
+    private void detectCornersGesture(MotionEvent e) {
+        // 1) 只在 kiosk 模式時處理
+        if (!"true".equals(SystemProperties.get("persist.kioskmode.enable", "false"))) return;
 
-						if (gTouchX1 > (dpWidth - dpWidth / 5) && gTouchY1 > (dpHeight - dpHeight / 5)
-								&& gTouchX2 > (dpWidth - dpWidth / 5) && gTouchY2 > (dpHeight - dpHeight / 5)) {
-							long CurrentTime = System.currentTimeMillis();
-							if (lastClickTime == 0) {
-								timesTouched++;
-								lastClickTime = CurrentTime;
-							} else if (CurrentTime - lastClickTime <= 500) {
-								timesTouched++;
-								lastClickTime = CurrentTime;
-								if (timesTouched >= 5) {
-									timesTouched = 0;
-									//SystemProperties.set("persist.kioskmode.enable", "false");
-									Intent intent = new Intent();
-				                    intent.setAction("android.intent.action.DISABLE_KIOSKMODE");
-				                    sendBroadcast(intent);
-								}
-							} else {
-								timesTouched = 0;
-								lastClickTime = CurrentTime;
-							}
-						}
-					}
-					return;
-			}
-		}
-	}
+        // 2) 讀取設定：0=單指 10 次；1=雙指 5 次
+        final int exitItem = safeParseInt(SystemProperties.get("persist.kioskmode.exitmode", "0"), 0);
+        final int expectedPointers = (exitItem == 0) ? 1 : 2;
+        final int requiredTaps     = (exitItem == 0) ? 10 : 5;
+
+        // 3) 僅處理 DOWN/POINTER_DOWN（把你原本「%5」的行為改成正規作法）
+        final int action = e.getActionMasked();
+        if (action != MotionEvent.ACTION_DOWN && action != MotionEvent.ACTION_POINTER_DOWN) return;
+
+        // 4) 算角落門檻（修正 Corner_Y 使用寬度的筆誤）
+        final int w = mDecor.getRight() - mDecor.getLeft();
+        final int h = mDecor.getBottom() - mDecor.getTop();
+        int cornerX = (w == 800 && h == 1280) ? (w * 2 / 3) : (w * 4 / 5);
+        int cornerY = (w == 800 && h == 1280) ? (h * 3 / 4) : (h * 4 / 5);
+
+        // 5) 指數/位置檢查
+        if (e.getPointerCount() != expectedPointers) return;
+        if (!allPointersInCorner(e, expectedPointers, cornerX, cornerY)) return;
+
+        // 6) 計數與時間窗（使用事件時間）
+        long now = e.getEventTime();
+        if (now - lastCornerTapMs > TAP_WINDOW_MS) cornerTapCount = 0;
+        lastCornerTapMs = now;
+        cornerTapCount++;
+
+        Log.d(TAG, expectedPointers + " finger touch count: " + cornerTapCount);
+
+        // 7) 觸發後歸零避免連觸
+        if (cornerTapCount >= requiredTaps) {
+            cornerTapCount = 0;
+            sendBroadcast(new Intent(ACTION_DISABLE_KIOSK));
+        }
+    }
+
+    private static int safeParseInt(String s, int defVal) {
+        try { return Integer.parseInt(s); } catch (Throwable ignore) { return defVal; }
+    }
+
+    // 檢查前 count 個 pointer 都落在右下角區域
+    private static boolean allPointersInCorner(MotionEvent e, int count, int cx, int cy) {
+        for (int i = 0; i < count; i++) {
+            if (!(e.getX(i) > cx && e.getY(i) > cy)) return false;
+        }
+        return true;
+    }
 
 	private long backPressTime = 0;
 	private static final long LONG_PRESS_DURATION = 1000;
